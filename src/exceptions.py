@@ -1,0 +1,34 @@
+class APIException(Exception):
+    def __init__(self, status_code: int, error: str):
+        self.status_code = status_code
+        self.error = error
+
+class DatabaseUnavailableException(Exception):
+    status_code = 503
+
+    def __init__(self, original_error: Exception):
+        self.error = f"Database unavailable: {str(original_error)}"
+        super().__init__(self.error)
+
+class ModelAlreadyExistsException(BaseException):
+    """Объект уже существует"""
+
+class ModelNoFoundException(BaseException):
+    """Объект не найден"""
+
+class ModelMultipleResultsFoundException(BaseException):
+    """При ожидании одного объекта нашлось несколько экземпляров"""
+
+class DocumentNoFoundException(ModelNoFoundException):
+    """Документ не найден"""
+    detail = "document not found"
+
+class DocumentException(BaseException):
+    """Ошибка при работе с документом"""
+
+    detail = "Error Document"
+
+class NoSuchBucketException(BaseException):
+    """Не найдено хранилище"""
+
+    detail = "no such bucket"

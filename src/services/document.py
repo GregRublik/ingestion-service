@@ -1,0 +1,85 @@
+from typing import Optional, List
+from repositories.aws import AWSRepository
+
+from repositories.document import DocumentRepository
+from fastapi import UploadFile
+from models.document import DocumentStatus
+from schemas.document import DocumentResponse
+from services.unit_of_work import UnitOfWork
+from config import settings
+
+class DocumentService:
+    """Service for working with documents"""
+
+    def __init__(self, aws_repository: AWSRepository, document_repository: DocumentRepository, uow: UnitOfWork):
+        self.aws_repository = aws_repository
+        self.document_repository = document_repository
+        self.uow = uow
+
+    async def add_documents(self, bucket: str, files: list[UploadFile]):
+        async with self.uow:
+            list_added_documents = []
+            for file in files:
+                # Upload file to AWS S3
+                document = await self.aws_repository.push_document(bucket, file.filename, file.file.read())
+
+                # Save document metadata in the database
+                db_document = await self.document_repository.add_one(self.uow.session,{
+                    "file_name": file.filename,
+                    "file_type": file.content_type,
+                    "file_size": file.size,
+                    "storage_path": f"s3://{bucket}/{file.filename}",
+                    "status": DocumentStatus.UPLOADED,
+                })
+                list_added_documents.append(db_document)
+
+            return list_added_documents
+
+    async def get_document(self, bucket: str, file_id: str):
+        async with self.uow:
+            return await self.aws_repository.get_document(bucket, file_id)
+
+    async def get_document_by_id(self, doc_id: int) -> DocumentResponse:
+        async with self.uow:
+            document = await self.document_repository.get_by_id(self.uow.session, doc_id)
+            return DocumentResponse(
+                id=document.id,
+                file_name=document.file_name,
+                file_type=document.file_type,
+                file_size=document.file_size,
+                storage_path=document.storage_path,
+                status=document.status,
+                created_at=document.created_at,
+                updated_at=document.updated_at,
+                meta=document.meta,
+                error_message=document.error_message
+            )
+
+    async def get_documents(self, status_filter: Optional[str] = None) -> List[DocumentResponse]:
+        async with self.uow:
+            if status_filter:
+                documents = await self.document_repository.get_by_status(self.uow.session, status_filter)
+            else:
+                documents = await self.document_repository.get_all(self.uow.session)
+
+            return [
+                DocumentResponse(
+                    id=doc.id,
+                    file_name=doc.file_name,
+                    file_type=doc.file_type,
+                    file_size=doc.file_size,
+                    storage_path=doc.storage_path,
+                    status=doc.status,
+                    created_at=doc.created_at,
+                    updated_at=doc.updated_at,
+                    meta=doc.meta,
+                    error_message=doc.error_message
+                )
+                for doc in documents
+            ]
+
+    async def delete_document(self, doc_id: int):
+        async with self.uow:
+            document = await self.document_repository.get_by_id(self.uow.session, doc_id)
+            await self.aws_repository.delete_document(settings.aws.bucket_name, document.file_name)
+            await self.document_repository.delete_by_id(self.uow.session, doc_id)

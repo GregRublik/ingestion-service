@@ -1,0 +1,17 @@
+[project]
+name = "ingestion-service"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiobotocore>=3.3.0",
+    "alembic>=1.18.4",
+    "asyncpg>=0.31.0",
+    "fastapi==0.116.1",
+    "greenlet>=3.3.2",
+    "pydantic-settings>=2.13.1",
+    "python-multipart==0.0.20",
+    "sqlalchemy>=2.0.48",
+    "uvicorn>=0.42.0",
+]
