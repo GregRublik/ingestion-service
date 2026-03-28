@@ -50,10 +50,14 @@ class Settings(BaseSettings):
     aws: AWSSettings
     rabbitmq: RabbitSettings
 
+
     model_config = SettingsConfigDict(env_file=".env", env_prefix="APP_", extra="ignore")
 
 settings = Settings(
     db=DbSettings(),
-    rabbitmq=RabbitSettings(),
+    rabbitmq=RabbitSettings(
+        queues=QueueSettings()
+    ),
     aws=AWSSettings(),
+
 )

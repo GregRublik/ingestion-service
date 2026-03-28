@@ -30,6 +30,7 @@ class Document(Base):
     storage_path = Column(String, nullable=True)  # s3://...
     file_name = Column(String, nullable=True)
     file_type = Column(String, nullable=True)  # pdf, txt
+    file_extension = Column(String, nullable=True)
     file_size = Column(Integer, nullable=True)
 
     meta = Column(JSON, default={})

@@ -1,3 +1,4 @@
+import os
 from typing import Optional, List
 from repositories.aws import AWSRepository
 
@@ -27,6 +28,7 @@ class DocumentService:
                 db_document = await self.document_repository.add_one(self.uow.session,{
                     "file_name": file.filename,
                     "file_type": file.content_type,
+                    "file_extension": os.path.splitext(file.filename)[1].lower(),
                     "file_size": file.size,
                     "storage_path": f"s3://{bucket}/{file.filename}",
                     "status": DocumentStatus.UPLOADED,
@@ -41,19 +43,7 @@ class DocumentService:
 
     async def get_document_by_id(self, doc_id: int) -> DocumentResponse:
         async with self.uow:
-            document = await self.document_repository.get_by_id(self.uow.session, doc_id)
-            return DocumentResponse(
-                id=document.id,
-                file_name=document.file_name,
-                file_type=document.file_type,
-                file_size=document.file_size,
-                storage_path=document.storage_path,
-                status=document.status,
-                created_at=document.created_at,
-                updated_at=document.updated_at,
-                meta=document.meta,
-                error_message=document.error_message
-            )
+            return await self.document_repository.get_by_id(self.uow.session, doc_id)
 
     async def get_documents(self, status_filter: Optional[str] = None) -> List[DocumentResponse]:
         async with self.uow:
@@ -62,21 +52,7 @@ class DocumentService:
             else:
                 documents = await self.document_repository.get_all(self.uow.session)
 
-            return [
-                DocumentResponse(
-                    id=doc.id,
-                    file_name=doc.file_name,
-                    file_type=doc.file_type,
-                    file_size=doc.file_size,
-                    storage_path=doc.storage_path,
-                    status=doc.status,
-                    created_at=doc.created_at,
-                    updated_at=doc.updated_at,
-                    meta=doc.meta,
-                    error_message=doc.error_message
-                )
-                for doc in documents
-            ]
+            return documents
 
     async def update_document(self, doc_id: int, document: DocumentUpdate):
         async with self.uow:

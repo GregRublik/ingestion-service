@@ -15,6 +15,7 @@ class DocumentStatus(str, Enum):
 class DocumentResponse(BaseModel):
     id: int
     file_name: str
+    file_extension: str
     file_type: str
     file_size: int
     storage_path: str
