@@ -8,6 +8,11 @@ class AWSSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="AWS_", extra="ignore")
 
+class QueueSettings(BaseSettings):
+    embedding_document: str
+
+    model_config = SettingsConfigDict(env_file=".env", env_prefix="QUEUE_", extra="ignore")
+
 
 class RabbitSettings(BaseSettings):
     user: str
@@ -15,7 +20,7 @@ class RabbitSettings(BaseSettings):
     host: str
     port: int
 
-    # queues: QueueSettings
+    queues: QueueSettings
 
     @property
     def url(self) -> str:

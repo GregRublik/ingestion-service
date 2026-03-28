@@ -23,5 +23,4 @@ graph TD
     style C fill:#f9f,stroke:#333,stroke-width:4px,color:#000
     style c fill:#f9f,stroke:#333,stroke-width:4px,color:#000
     style B fill:#00ff08,stroke:#014a04,stroke-width:2px,color:#000
-    
 ```

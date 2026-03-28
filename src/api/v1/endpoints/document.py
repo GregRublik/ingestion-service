@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, UploadFile
 from typing import List, Optional
 from services.document import DocumentService
 from depends import get_document_service
-from schemas.document import DocumentResponse
+from schemas.document import DocumentResponse, DocumentUpdate
 from exceptions import DocumentNoFoundException, APIException, DocumentException
 from config import settings
 
@@ -41,6 +41,20 @@ async def get_documents(
 ):
     try:
         return await document_service.get_documents(status_filter=status_filter)
+    except DocumentNoFoundException as e:
+        raise APIException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            error=e.detail
+        )
+
+@router.patch("/documents/{doc_id}", response_model=DocumentResponse)
+async def update_document(
+    doc_id: int,
+    payload: DocumentUpdate,
+    document_service: DocumentService = Depends(get_document_service),
+):
+    try:
+        return await document_service.update_document(doc_id, payload)
     except DocumentNoFoundException as e:
         raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,

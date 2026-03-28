@@ -13,7 +13,6 @@ class AWSRepository:
                 Key=key,
                 Body=data,
             )
-            return {"id": 123, "storage_path": f"s3://{bucket}/{key}"}
         except self.client.exceptions.NoSuchBucket:
             raise NoSuchBucketException
 
