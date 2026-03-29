@@ -8,6 +8,7 @@ dependencies = [
     "aiobotocore>=3.3.0",
     "alembic>=1.18.4",
     "asyncpg>=0.31.0",
+    "docling[ocr]>=2.82.0",
     "fastapi==0.116.1",
     "greenlet>=3.3.2",
     "pydantic-settings>=2.13.1",

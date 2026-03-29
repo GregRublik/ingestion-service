@@ -37,9 +37,9 @@ class DocumentService:
 
             return list_added_documents
 
-    async def get_document(self, bucket: str, file_id: str):
+    async def get_document(self, bucket: str, file_name: str):
         async with self.uow:
-            return await self.aws_repository.get_document(bucket, file_id)
+            return await self.aws_repository.get_document(bucket, file_name)
 
     async def get_document_by_id(self, doc_id: int) -> DocumentResponse:
         async with self.uow:

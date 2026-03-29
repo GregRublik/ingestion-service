@@ -16,11 +16,12 @@ class AWSRepository:
         except self.client.exceptions.NoSuchBucket:
             raise NoSuchBucketException
 
-    async def get_document(self, bucket: str, key: str):
+    async def get_document(self, bucket: str, key: str) -> dict:
         response = await self.client.get_object(
             Bucket=bucket,
             Key=key,
         )
+        print(response)
         return {
             "body": response["Body"],
             "content_type": response.get("ContentType"),

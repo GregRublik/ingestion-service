@@ -47,6 +47,19 @@ async def get_documents(
             error=e.detail
         )
 
+@router.get("/documents/{doc_id}/download")
+async def get_documents(
+    file_name: str,
+    document_service: DocumentService = Depends(get_document_service),
+):
+    try:
+        return await document_service.get_document(settings.aws.bucket_name, file_name)
+    except DocumentNoFoundException as e:
+        raise APIException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            error=e.detail
+        )
+
 @router.patch("/documents/{doc_id}", response_model=DocumentResponse)
 async def update_document(
     doc_id: int,

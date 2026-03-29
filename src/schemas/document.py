@@ -6,6 +6,7 @@ from typing import Optional, Dict
 class DocumentStatus(str, Enum):
     UPLOADED = "uploaded"
     PROCESSING = "processing"
+    NORMALIZED = "normalized"
     EMBEDDING = "embedding"
     INDEXING = "indexing"
     READY = "ready"

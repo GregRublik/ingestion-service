@@ -9,6 +9,7 @@ from db.database import Base
 class DocumentStatus(enum.Enum):
     UPLOADED = "uploaded"  # приняли документ
     PROCESSING = "processing"  # идёт обработка
+    NORMALIZED = "normalized" # нормализован
     EMBEDDING = "embedding"  # считаются embeddings
     INDEXING = "indexing"  # пишем в vector DB
     READY = "ready"  # готов к использованию
