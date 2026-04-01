@@ -1,5 +1,7 @@
 import os
 from typing import Optional, List
+
+from exceptions import DocumentNoFoundException, ModelNoFoundException
 from repositories.aws import AWSRepository
 
 from repositories.document import DocumentRepository
@@ -65,6 +67,9 @@ class DocumentService:
 
     async def delete_document(self, doc_id: int):
         async with self.uow:
-            document = await self.document_repository.get_by_id(self.uow.session, doc_id)
-            await self.aws_repository.delete_document(settings.aws.bucket_name, document.file_name)
-            await self.document_repository.delete_by_id(self.uow.session, doc_id)
+            try:
+                document = await self.document_repository.get_by_id(self.uow.session, doc_id)
+                await self.aws_repository.delete_document(settings.aws.bucket_name, document.file_name)
+                await self.document_repository.delete_by_id(self.uow.session, doc_id)
+            except ModelNoFoundException:
+                raise DocumentNoFoundException

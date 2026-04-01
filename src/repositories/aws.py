@@ -21,7 +21,6 @@ class AWSRepository:
             Bucket=bucket,
             Key=key,
         )
-        print(response)
         return {
             "body": response["Body"],
             "content_type": response.get("ContentType"),

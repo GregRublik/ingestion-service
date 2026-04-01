@@ -6,9 +6,11 @@ from repositories.document import DocumentRepository
 from repositories.aws import AWSRepository
 from services.unit_of_work import UnitOfWork
 from config import settings
-from models.document import Document
+from models.document import Document, DocumentStatus
 
 from docling.document_converter import DocumentConverter
+from docling.datamodel.document import DocumentStream
+from io import BytesIO
 
 
 import json
@@ -55,7 +57,7 @@ class NormalizationService:
 
             try:
                 # 1. статус
-                document_db.status = document_db.status.PROCESSING
+                document_db.status = DocumentStatus.PROCESSING
 
 
                 file_obj = await self.aws_repository.get_document(
@@ -63,36 +65,24 @@ class NormalizationService:
                 )
 
                 content: StreamingBody = file_obj["body"]
+                cont = await content.read()
 
-                # 3. парсер
-                parser = self.parsers.get(document_db.file_extension.lower())
+                # Создаем DocumentStream из байтов
+                doc_stream = DocumentStream(
+                    name=document_db.file_name,  # имя файла
+                    stream=BytesIO(cont)  # передаем как поток
+                )
+                result = self.converter.convert(doc_stream).document
+                print("res: ", result.export_to_markdown())
 
-                if not parser:
-                    raise ValueError(
-                        f"Unsupported file type: {document_db.file_extension}"
-                    )
-
-                # 4. нормализация
-                normalized = await parser(content)
-
-                # 5. сохранение
                 normalized_path = await self.save_normalized(
-                    document_db, normalized
+                    document_db, result.export_to_markdown()
                 )
 
-                # 6. мета
-                document_db.meta = {
-                    **(document_db.meta or {}),
-                    "normalized_path": normalized_path,
-                    "normalized": True,
-                }
-
-                document_db.status = document_db.status.NORMALIZED
-
-                return document_db
 
             except Exception as e:
-                document_db.status = document_db.status.FAILED
+                print(e)
+                document_db.status = DocumentStatus.FAILED
                 document_db.error_message = str(e)
                 return document_db
 
@@ -180,14 +170,15 @@ class NormalizationService:
 
         finally:
             try:
-                await streaming_body.close()
-            except Exception:
-                print("error close streaming body")
+                streaming_body.close()
+            except Exception as e:
+                print(f"error close streaming body{e}")
 
             try:
                 os.unlink(tmp.name)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"error os.unlink {e}")
+
 
 
     def _normalize_with_docling_sync(self, file_path: str) -> dict:
@@ -231,12 +222,12 @@ class NormalizationService:
     async def save_normalized(
         self,
         parent_doc: Document,
-        normalized_data: dict
+        normalized_data
     ) -> str:
         filename = Path(parent_doc.file_name).stem
-        key = f"normalized/{filename}.json"
+        key = f"normalized/{filename}.md"
 
-        payload = json.dumps(normalized_data, ensure_ascii=False).encode("utf-8")
+        payload = normalized_data
 
         await self.aws_repository.push_document(
             settings.aws.bucket_name,
@@ -245,12 +236,12 @@ class NormalizationService:
         )
 
         await self.document_repository.add_one(self.uow.session,{
-                    "file_name": f"{filename}.json",
+                    "file_name": f"{filename}.md",
                     "file_type": "application/json",
                     "file_extension": ".json",
                     "file_size": len(payload),
                     "storage_path": f"s3://{settings.aws.bucket_name}/{key}",
-                    "status": parent_doc.status.NORMALIZED,
+                    "status": DocumentStatus.NORMALIZED,
                 })
 
         return key
