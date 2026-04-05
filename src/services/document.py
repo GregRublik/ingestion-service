@@ -23,8 +23,6 @@ class DocumentService:
         async with self.uow:
             list_added_documents = []
             for file in files:
-                # Upload file to AWS S3
-                await self.aws_repository.push_document(bucket, file.filename, file.file.read())
 
                 # Save document metadata in the database
                 db_document = await self.document_repository.add_one(self.uow.session,{
@@ -37,11 +35,10 @@ class DocumentService:
                 })
                 list_added_documents.append(db_document)
 
-            return list_added_documents
+                # Upload file to AWS S3
+                await self.aws_repository.push_document(bucket, file.filename, file.file.read())
 
-    async def get_document(self, bucket: str, file_name: str):
-        async with self.uow:
-            return await self.aws_repository.get_document(bucket, file_name)
+            return list_added_documents
 
     async def get_document_by_id(self, doc_id: int) -> DocumentResponse:
         async with self.uow:
