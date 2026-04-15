@@ -7,6 +7,7 @@ from services import document, unit_of_work
 from repositories.aws import AWSRepository
 from aws.client import get_aws_client
 from db.database import get_db_session
+from services.chunk import ChunkService
 from services.normalization import NormalizationService
 
 
@@ -38,3 +39,8 @@ def get_normalization_service(
     uow: unit_of_work.UnitOfWork = Depends(get_uow_service),
 ) -> NormalizationService:
     return NormalizationService(aws_repository, document_repository, uow)
+
+def get_chunk_service(
+    aws_repository: AWSRepository = Depends(get_aws_repository),
+) -> ChunkService:
+    return ChunkService(aws_repository)

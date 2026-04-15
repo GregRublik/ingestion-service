@@ -13,7 +13,7 @@ from langchain_text_splitters import (
 from config import settings
 
 
-class ChunkingService:
+class ChunkService:
 
     def __init__(
             self,
@@ -34,17 +34,104 @@ class ChunkingService:
     async def chunk(
             self,
             doc: Document,
-            chunk_type: Literal["recursive", "char", "markdown", "syntax"],
+            chunk_type: Literal["recursive", "char", "markdown", "semantic"],
             params: dict
-    ) :
+    ):
         file_obj = await self.aws_repository.get_document(
-            settings.aws.bucket_name, doc.file_name
+            settings.aws.bucket_name,
+            doc.file_name
         )
-
-        splitter = self._get_splitter(chunk_type, params)
 
         content: StreamingBody = file_obj["body"]
         cont = await content.read()
 
-        return splitter.split_text(cont)
+        text = cont.decode("utf-8", errors="ignore")  # ✅ важно
+
+        splitter = self._get_splitter(chunk_type, params)
+
+        raw_chunks = splitter.split_text(text)
+
+        chunks = [
+            {
+                "id": i,
+                "text": chunk,
+                "metadata": {
+                    "chunk_index": i,
+                    "length": len(chunk)
+                }
+            }
+            for i, chunk in enumerate(raw_chunks)
+        ]
+
+        return {
+            "chunks": chunks,
+            "meta": {
+                "chunk_type": chunk_type,
+                "params": params
+            }
+        }
+
+    async def save_chunks(
+            self,
+            parent_doc: Document,
+            chunk_data: dict,
+            chunk_type: str
+    ) -> str:
+        filename = Path(parent_doc.file_name).stem
+        key = f"chunks/{chunk_type}/{filename}.json"
+
+        payload = json.dumps(chunk_data).encode("utf-8")
+
+        await self.aws_repository.push_document(
+            settings.aws.bucket_name,
+            key,
+            payload
+        )
+
+        await self.document_repository.add_one(
+            self.uow.session,
+            {
+                "file_name": f"{filename}.chunks.json",
+                "file_type": "application/json",
+                "file_extension": ".json",
+                "file_size": len(payload),
+                "storage_path": f"s3://{settings.aws.bucket_name}/{key}",
+                "status": DocumentStatus.EMBEDDING,  # следующий этап
+            }
+        )
+
+        return key
+
+    async def chunk_document(
+            self,
+            doc_id: int,
+            chunk_type: str,
+            params: dict
+    ):
+        async with self.uow:
+            document = await self.document_repository.get_by_id(
+                self.uow.session,
+                doc_id
+            )
+
+            try:
+                document.status = DocumentStatus.PROCESSING
+
+                chunk_data = await self.chunk(
+                    document,
+                    chunk_type,
+                    params
+                )
+
+                await self.save_chunks(
+                    document,
+                    chunk_data,
+                    chunk_type
+                )
+
+                document.status = DocumentStatus.EMBEDDING
+
+            except Exception as e:
+                document.status = DocumentStatus.FAILED
+                document.error_message = str(e)
 

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api.v1.endpoints import document, normalization
+from api.v1.endpoints import document, normalization, chunk
 import uvicorn
 from config import settings
 from exceptions import APIException
@@ -9,6 +9,7 @@ app = FastAPI()
 
 app.include_router(document.router, tags=["document"])
 app.include_router(normalization.router, tags=["normalization"])
+app.include_router(chunk.router, tags=["chunk"])
 
 app.add_exception_handler(APIException, api_exception_handler)
 
