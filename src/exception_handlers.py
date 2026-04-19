@@ -1,4 +1,4 @@
-# core/exception_handlers.py
+# src/exception_handlers.py
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from exceptions import APIException, DatabaseUnavailableException
