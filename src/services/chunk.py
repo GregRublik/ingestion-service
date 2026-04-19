@@ -50,9 +50,10 @@ class ChunkService:
             chunk_type: Literal["recursive", "char", "markdown", "semantic"],
             params: dict
     ):
+
         file_obj = await self.aws_repository.get_document(
             settings.aws.bucket_name,
-            doc.file_name
+            f"normalized/{doc.file_name}"
         )
 
         content: StreamingBody = file_obj["body"]
@@ -95,7 +96,7 @@ class ChunkService:
 
         payload = json.dumps(chunk_data).encode("utf-8")
 
-        await self.aws_repository.push_document(
+        res = await self.aws_repository.push_document(
             settings.aws.bucket_name,
             key,
             payload
@@ -147,4 +148,5 @@ class ChunkService:
             except Exception as e:
                 document.status = DocumentStatus.FAILED
                 document.error_message = str(e)
+                raise e
 

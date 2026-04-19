@@ -61,4 +61,4 @@ def get_chunk_service(
     uow: unit_of_work.UnitOfWork = Depends(get_uow_service),
     embedding_service: EmbeddingService = Depends(get_embedding_service),
 ) -> ChunkService:
-    return ChunkService(aws_repository, document_repository, uow, )
+    return ChunkService(aws_repository, document_repository, uow, embedding_service)

@@ -3,24 +3,17 @@
 
 ```mermaid
 graph TD
-    K[evaluator-service] 
-    
-    
-    C[orchestrator-service] <--1--> B[INGESTION-SERVICE]
-    C <--2--> D[embedding-service]
+    K[evaluator-service]
     
     
     F[bot-service] --> c[orchestrator-service]  
-    c <--1--> G[retrieval-service]
-    c <--2--> E[reranker-service]
+    c <--1--> B[INGESTION-SERVICE] 
+    c <--2--> G[retrieval-service]
+    c <--3--> E[reranker-service]
     c <--4--> I[generation-service]
     I --5--> F
     
     
-    
-    c <--Один и тот же оркестратор--> C
-    
-    style C fill:#f9f,stroke:#333,stroke-width:4px,color:#000
     style c fill:#f9f,stroke:#333,stroke-width:4px,color:#000
     style B fill:#00ff08,stroke:#014a04,stroke-width:2px,color:#000
 ```

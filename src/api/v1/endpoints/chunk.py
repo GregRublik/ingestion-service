@@ -11,7 +11,7 @@ from exceptions import DocumentNoFoundException, APIException, DocumentException
 
 router = APIRouter()
 
-@router.post("/documents/{doc_id}/chunk", response_model=DocumentResponse)
+@router.post("/documents/{doc_id}/chunk")
 async def chunk_document(
     doc_id: int,
     payload: ChunkRequest,
