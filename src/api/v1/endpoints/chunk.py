@@ -1,13 +1,11 @@
-
 from fastapi import APIRouter, Depends, status
 
 from services.chunk import ChunkService
-from services.document import DocumentService
 
-from schemas.chunk import ChunkRequest  # или куда положишь схему
+from schemas.chunk import ChunkRequest
 from schemas.document import DocumentResponse
 
-from depends import get_document_service, get_chunk_service
+from depends import get_chunk_service
 
 from exceptions import DocumentNoFoundException, APIException, DocumentException
 

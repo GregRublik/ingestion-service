@@ -1,9 +1,11 @@
 from aiobotocore.response import StreamingBody
 from langchain_experimental.text_splitter import SemanticChunker
 
-from models.document import Document
+from models.document import Document, DocumentStatus
 from repositories.aws import AWSRepository
 from typing import Literal
+from pathlib import Path
+import json
 
 from langchain_text_splitters import (
     RecursiveCharacterTextSplitter,
@@ -11,6 +13,9 @@ from langchain_text_splitters import (
     MarkdownHeaderTextSplitter,
 )
 from config import settings
+from repositories.document import DocumentRepository
+from services.embedding import EmbeddingService
+from services.unit_of_work import UnitOfWork
 
 
 class ChunkService:
@@ -18,8 +23,14 @@ class ChunkService:
     def __init__(
             self,
         aws_repository: AWSRepository,
+        document_repository: DocumentRepository,
+        uow: UnitOfWork,
+        embedding_service: EmbeddingService,
     ):
         self.aws_repository = aws_repository
+        self.document_repository = document_repository
+        self.uow = uow
+        self.embedding_service = embedding_service
 
     chunking_methods = {
         "recursive": RecursiveCharacterTextSplitter,
@@ -28,7 +39,9 @@ class ChunkService:
         "semantic": SemanticChunker
     }
 
-    def _get_splitter(self, chunk_type: str, params: dict):
+    def _get_splitter(self, chunk_type: str, params: dict, embedding):
+        if chunk_type == "semantic":
+            return self.chunking_methods[chunk_type](**params, embeddings=embedding)
         return self.chunking_methods[chunk_type](**params)
 
     async def chunk(
@@ -47,7 +60,7 @@ class ChunkService:
 
         text = cont.decode("utf-8", errors="ignore")  # ✅ важно
 
-        splitter = self._get_splitter(chunk_type, params)
+        splitter = self._get_splitter(chunk_type, params, self.embedding_service.model)
 
         raw_chunks = splitter.split_text(text)
 
@@ -105,7 +118,7 @@ class ChunkService:
     async def chunk_document(
             self,
             doc_id: int,
-            chunk_type: str,
+            chunk_type: Literal["recursive", "char", "markdown", "semantic"],
             params: dict
     ):
         async with self.uow:

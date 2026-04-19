@@ -28,6 +28,12 @@ class RabbitSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="RABBITMQ_", extra="ignore")
 
+class VDBSettings(BaseSettings):
+    embedding_model: str
+    device: str
+
+    model_config = SettingsConfigDict(env_file=".env", env_prefix="VDB_", extra="ignore")
+
 class DbSettings(BaseSettings):
     host: str
     user: str
@@ -49,6 +55,7 @@ class Settings(BaseSettings):
     db: DbSettings
     aws: AWSSettings
     rabbitmq: RabbitSettings
+    vdb: VDBSettings
 
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="APP_", extra="ignore")
@@ -59,5 +66,5 @@ settings = Settings(
         queues=QueueSettings()
     ),
     aws=AWSSettings(),
-
+    vdb=VDBSettings(),
 )

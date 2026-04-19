@@ -12,6 +12,7 @@ dependencies = [
     "fastapi==0.116.1",
     "greenlet>=3.3.2",
     "langchain-experimental>=0.4.1",
+    "langchain-huggingface>=1.2.2",
     "langchain-text-splitters>=1.1.1",
     "pydantic-settings>=2.13.1",
     "python-multipart==0.0.20",
