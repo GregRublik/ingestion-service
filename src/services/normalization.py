@@ -237,8 +237,8 @@ class NormalizationService:
 
         await self.document_repository.add_one(self.uow.session,{
                     "file_name": f"{filename}.md",
-                    "file_type": "application/json",
-                    "file_extension": ".json",
+                    "file_type": "text/markdown",
+                    "file_extension": ".md",
                     "file_size": len(payload),
                     "storage_path": f"s3://{settings.aws.bucket_name}/{key}",
                     "status": DocumentStatus.NORMALIZED,
