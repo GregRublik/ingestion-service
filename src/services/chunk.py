@@ -90,19 +90,19 @@ class ChunkService:
             parent_doc: Document,
             chunk_data: dict,
             chunk_type: str
-    ) -> str:
+    ) -> Document:
         filename = Path(parent_doc.file_name).stem
         key = f"chunks/{chunk_type}/{filename}.json"
 
-        payload = json.dumps(chunk_data).encode("utf-8")
+        payload = json.dumps(chunk_data, ensure_ascii=False).encode("utf-8")
 
-        res = await self.aws_repository.push_document(
+        await self.aws_repository.push_document(
             settings.aws.bucket_name,
             key,
             payload
         )
 
-        await self.document_repository.add_one(
+        return await self.document_repository.add_one(
             self.uow.session,
             {
                 "file_name": f"{filename}.chunks.json",
@@ -114,14 +114,13 @@ class ChunkService:
             }
         )
 
-        return key
 
     async def chunk_document(
             self,
             doc_id: int,
             chunk_type: Literal["recursive", "char", "markdown", "semantic"],
             params: dict
-    ):
+    ) -> Document:
         async with self.uow:
             document = await self.document_repository.get_by_id(
                 self.uow.session,
@@ -137,13 +136,15 @@ class ChunkService:
                     params
                 )
 
-                await self.save_chunks(
+                db_document = await self.save_chunks(
                     document,
                     chunk_data,
                     chunk_type
                 )
 
                 document.status = DocumentStatus.EMBEDDING
+
+                return db_document
 
             except Exception as e:
                 document.status = DocumentStatus.FAILED
