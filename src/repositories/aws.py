@@ -28,3 +28,10 @@ class AWSRepository:
 
     async def delete_document(self,bucket: str, key: str):
         await self.client.delete_object(Bucket=bucket, Key=key)
+
+    async def get_download_url(self, bucket: str, key: str) -> str:
+        return await self.client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket, "Key": key},
+            ExpiresIn=3600,
+        )

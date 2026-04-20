@@ -1,7 +1,12 @@
 import os
 from typing import Optional, List
 
-from exceptions import DocumentNoFoundException, ModelNoFoundException
+from exceptions import (
+    DocumentNoFoundException,
+    ModelNoFoundException,
+    DocumentAlreadyExistsException,
+    ModelAlreadyExistsException
+)
 from repositories.aws import AWSRepository
 
 from repositories.document import DocumentRepository
@@ -20,25 +25,28 @@ class DocumentService:
         self.uow = uow
 
     async def add_documents(self, bucket: str, files: list[UploadFile]):
-        async with self.uow:
-            list_added_documents = []
-            for file in files:
+        try:
+            async with self.uow:
+                list_added_documents = []
+                for file in files:
 
-                # Save document metadata in the database
-                db_document = await self.document_repository.add_one(self.uow.session,{
-                    "file_name": file.filename,
-                    "file_type": file.content_type,
-                    "file_extension": os.path.splitext(file.filename)[1].lower(),
-                    "file_size": file.size,
-                    "storage_path": f"s3://{bucket}/{file.filename}",
-                    "status": DocumentStatus.UPLOADED,
-                })
-                list_added_documents.append(db_document)
+                    # Save document metadata in the database
+                    db_document = await self.document_repository.add_one(self.uow.session,{
+                        "file_name": file.filename,
+                        "file_type": file.content_type,
+                        "file_extension": os.path.splitext(file.filename)[1].lower(),
+                        "file_size": file.size,
+                        "storage_path": f"s3://{bucket}/{file.filename}",
+                        "status": DocumentStatus.UPLOADED,
+                    })
+                    list_added_documents.append(db_document)
 
-                # Upload file to AWS S3
-                await self.aws_repository.push_document(bucket, file.filename, file.file.read())
+                    # Upload file to AWS S3
+                    await self.aws_repository.push_document(bucket, file.filename, file.file.read())
 
-            return list_added_documents
+                return list_added_documents
+        except ModelAlreadyExistsException as e:
+            raise DocumentAlreadyExistsException
 
     async def get_document_by_id(self, doc_id: int) -> DocumentResponse:
         async with self.uow:
@@ -68,5 +76,13 @@ class DocumentService:
                 document = await self.document_repository.get_by_id(self.uow.session, doc_id)
                 await self.aws_repository.delete_document(settings.aws.bucket_name, document.file_name)
                 await self.document_repository.delete_by_id(self.uow.session, doc_id)
+            except ModelNoFoundException:
+                raise DocumentNoFoundException
+
+    async def get_download_url(self, doc_id: int) -> str:
+        async with self.uow:
+            try:
+                document_db = await self.document_repository.get_by_id(self.uow.session, doc_id)
+                return await self.aws_repository.get_download_url(settings.aws.bucket_name, document_db.file_name)
             except ModelNoFoundException:
                 raise DocumentNoFoundException

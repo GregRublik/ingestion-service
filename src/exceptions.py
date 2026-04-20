@@ -23,6 +23,10 @@ class DocumentNoFoundException(ModelNoFoundException):
     """Документ не найден"""
     detail = "document not found"
 
+class DocumentAlreadyExistsException(ModelAlreadyExistsException):
+    """Документ уже существует"""
+    detail = "document already exists"
+
 class DocumentException(BaseException):
     """Ошибка при работе с документом"""
 

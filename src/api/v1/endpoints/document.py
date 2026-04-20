@@ -3,10 +3,10 @@ from typing import List, Optional
 from services.document import DocumentService
 from depends import get_document_service
 from schemas.document import DocumentResponse, DocumentUpdate
-from exceptions import DocumentNoFoundException, APIException, DocumentException
+from exceptions import DocumentNoFoundException, APIException, DocumentException, DocumentAlreadyExistsException
 from fastapi.responses import StreamingResponse
 from config import settings
-from urllib.parse import quote
+import urllib.parse
 
 router = APIRouter()
 
@@ -20,6 +20,11 @@ async def create_documents(
     except DocumentException as e:
         raise APIException(
             status_code=status.HTTP_400_BAD_REQUEST,
+            error=e.detail
+        )
+    except DocumentAlreadyExistsException as e:
+        raise APIException(
+            status_code=status.HTTP_409_CONFLICT,
             error=e.detail
         )
 
@@ -75,3 +80,11 @@ async def delete_document(
             status_code=status.HTTP_404_NOT_FOUND,
             error=e.detail
         )
+
+@router.get("/documents/{doc_id}/download")
+async def get_download_url_document(
+    doc_id: int,
+    document_service: DocumentService = Depends(get_document_service),
+):
+    doc = await document_service.get_download_url(doc_id)
+    print(doc)
