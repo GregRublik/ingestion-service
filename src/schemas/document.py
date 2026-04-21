@@ -47,3 +47,6 @@ class DocumentMetadataResponse(BaseModel):
     file_size: int
     meta: Optional[Dict] = None
     error_message: Optional[str] = None
+
+class DocumentDownloadUrlResponse(BaseModel):
+    url: str

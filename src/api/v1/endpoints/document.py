@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, UploadFile
 from typing import List, Optional
 from services.document import DocumentService
 from depends import get_document_service
-from schemas.document import DocumentResponse, DocumentUpdate
+from schemas.document import DocumentResponse, DocumentUpdate, DocumentDownloadUrlResponse
 from exceptions import DocumentNoFoundException, APIException, DocumentException, DocumentAlreadyExistsException
 from fastapi.responses import StreamingResponse
 from config import settings
@@ -81,10 +81,15 @@ async def delete_document(
             error=e.detail
         )
 
-@router.get("/documents/{doc_id}/download")
+@router.get("/documents/{doc_id}/download", response_model=DocumentDownloadUrlResponse)
 async def get_download_url_document(
     doc_id: int,
     document_service: DocumentService = Depends(get_document_service),
 ):
-    doc = await document_service.get_download_url(doc_id)
-    print(doc)
+    try:
+        return await document_service.get_download_url(doc_id)
+    except DocumentNoFoundException as e:
+        raise APIException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            error=e.detail
+        )

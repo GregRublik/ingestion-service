@@ -12,7 +12,7 @@ from repositories.aws import AWSRepository
 from repositories.document import DocumentRepository
 from fastapi import UploadFile
 from models.document import DocumentStatus
-from schemas.document import DocumentResponse, DocumentUpdate
+from schemas.document import DocumentResponse, DocumentUpdate, DocumentDownloadUrlResponse
 from services.unit_of_work import UnitOfWork
 from config import settings
 
@@ -79,10 +79,11 @@ class DocumentService:
             except ModelNoFoundException:
                 raise DocumentNoFoundException
 
-    async def get_download_url(self, doc_id: int) -> str:
+    async def get_download_url(self, doc_id: int) -> DocumentDownloadUrlResponse:
         async with self.uow:
             try:
                 document_db = await self.document_repository.get_by_id(self.uow.session, doc_id)
-                return await self.aws_repository.get_download_url(settings.aws.bucket_name, document_db.file_name)
+                url = await self.aws_repository.get_download_url(settings.aws.bucket_name, document_db.file_name)
+                return DocumentDownloadUrlResponse(url=url)
             except ModelNoFoundException:
                 raise DocumentNoFoundException

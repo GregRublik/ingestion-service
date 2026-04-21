@@ -7,7 +7,7 @@ from exceptions import DocumentNoFoundException, DocumentException, APIException
 router = APIRouter()
 
 @router.post("/documents/{doc_id}/normalize")
-async def run_normalize(
+async def normalize_document(
         doc_id: int,
         normalization_service: NormalizationService = Depends(get_normalization_service),
 ):
