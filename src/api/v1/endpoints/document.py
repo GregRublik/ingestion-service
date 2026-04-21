@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, status, UploadFile
 from typing import List, Optional
+
+from fastapi import APIRouter, Depends, status, UploadFile
+
+from config import settings
 from services.document import DocumentService
 from depends import get_document_service
 from schemas.document import DocumentResponse, DocumentUpdate, DocumentDownloadUrlResponse
 from exceptions import DocumentNotFoundException, APIException, DocumentException, DocumentAlreadyExistsException
-from fastapi.responses import StreamingResponse
-from config import settings
-import urllib.parse
+
 
 router = APIRouter()
 

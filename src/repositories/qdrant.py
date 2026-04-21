@@ -9,6 +9,9 @@ class QdrantRepository:
         self.client = client
         self.collection_name = collection_name
 
+    async def create_collection(self, collection_name: str):
+        await self.client.create_collection(collection_name)
+
     async def upsert(self, points: list[dict]):
         await self.client.upsert(
             collection_name=self.collection_name,

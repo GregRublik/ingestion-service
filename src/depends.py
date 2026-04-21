@@ -1,18 +1,28 @@
 from aiobotocore.client import AioBaseClient
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from qdrant_client import AsyncQdrantClient
+
+from config import settings
 
 from repositories.document import DocumentRepository
-from services import document, unit_of_work
+from repositories.qdrant import QdrantRepository
 from repositories.aws import AWSRepository
-from aws.client import get_aws_client
-from db.database import get_db_session
+
+from services import document, unit_of_work
 from services.chunk import ChunkService
 from services.embedding import EmbeddingService
 from services.normalization import NormalizationService
-from langchain_huggingface import HuggingFaceEmbeddings
-from config import settings
 
+from aws.client import get_aws_client
+from db.database import get_db_session
+from langchain_huggingface import HuggingFaceEmbeddings
+
+
+def get_vectordb_client() -> AsyncQdrantClient:
+    return AsyncQdrantClient(
+        url=f"https://{settings.vdb.host}:{settings.vdb.port}",
+    )
 
 # REPOSITORIES
 def get_aws_repository(
@@ -22,6 +32,14 @@ def get_aws_repository(
 
 def get_document_repository() -> DocumentRepository:
     return DocumentRepository()
+
+def get_qdrant_repository(
+        client: AsyncQdrantClient = Depends(get_vectordb_client)
+) -> QdrantRepository:
+    return QdrantRepository(
+        client,
+        settings.vdb.collection_name
+    )
 
 # SERVICES
 def get_uow_service(
@@ -44,7 +62,10 @@ def get_normalization_service(
     return NormalizationService(aws_repository, document_repository, uow)
 
 def get_embedding_service(
-
+    document_repository: DocumentRepository = Depends(get_document_repository),
+    aws_repository: AWSRepository = Depends(get_aws_repository),
+    qdrant_repository: QdrantRepository = Depends(get_qdrant_repository),
+    uow: unit_of_work.UnitOfWork = Depends(get_uow_service),
 ):
     model = HuggingFaceEmbeddings(
         model_name=settings.vdb.embedding_model,
@@ -53,7 +74,7 @@ def get_embedding_service(
             "normalize_embeddings": True,
         }
     )
-    return EmbeddingService(model)
+    return EmbeddingService(model, document_repository, aws_repository, qdrant_repository, uow)
 
 def get_chunk_service(
     aws_repository: AWSRepository = Depends(get_aws_repository),

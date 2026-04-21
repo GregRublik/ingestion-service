@@ -3,16 +3,18 @@ from services.normalization import NormalizationService
 
 from depends import get_normalization_service
 from exceptions import DocumentNotFoundException, DocumentException, APIException
+from schemas.document import DocumentResponse
 
 router = APIRouter()
 
-@router.post("/documents/{doc_id}/normalize")
+@router.post("/documents/{doc_id}/normalize", response_model=DocumentResponse)
 async def normalize_document(
         doc_id: int,
         normalization_service: NormalizationService = Depends(get_normalization_service),
 ):
     try:
-        await normalization_service.normalize_document(doc_id)
+        return await normalization_service.normalize_document(doc_id)
+
     except DocumentNotFoundException as e:
         raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -75,7 +75,7 @@ class NormalizationService:
                 result = self.converter.convert(doc_stream).document
                 print("res: ", result.export_to_markdown())
 
-                normalized_path = await self.save_normalized(
+                return await self.save_normalized(
                     document_db, result.export_to_markdown()
                 )
 
@@ -235,7 +235,7 @@ class NormalizationService:
             payload
         )
 
-        await self.document_repository.add_one(self.uow.session,{
+        document_db = await self.document_repository.add_one(self.uow.session,{
                     "file_name": f"{filename}.md",
                     "file_type": "text/markdown",
                     "file_extension": ".md",
@@ -244,7 +244,7 @@ class NormalizationService:
                     "status": DocumentStatus.NORMALIZED,
                 })
 
-        return key
+        return document_db
 
     # ========================
     # UTILS
