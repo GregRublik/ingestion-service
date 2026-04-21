@@ -3,7 +3,7 @@ from typing import List, Optional
 from services.document import DocumentService
 from depends import get_document_service
 from schemas.document import DocumentResponse, DocumentUpdate, DocumentDownloadUrlResponse
-from exceptions import DocumentNoFoundException, APIException, DocumentException, DocumentAlreadyExistsException
+from exceptions import DocumentNotFoundException, APIException, DocumentException, DocumentAlreadyExistsException
 from fastapi.responses import StreamingResponse
 from config import settings
 import urllib.parse
@@ -35,7 +35,7 @@ async def get_document(
 ):
     try:
         return await document_service.get_document_by_id(doc_id)
-    except DocumentNoFoundException as e:
+    except DocumentNotFoundException as e:
         raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,
             error=e.detail
@@ -48,7 +48,7 @@ async def get_documents(
 ):
     try:
         return await document_service.get_documents(status_filter=status_filter)
-    except DocumentNoFoundException as e:
+    except DocumentNotFoundException as e:
         raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,
             error=e.detail
@@ -62,7 +62,7 @@ async def update_document(
 ):
     try:
         return await document_service.update_document(doc_id, payload)
-    except DocumentNoFoundException as e:
+    except DocumentNotFoundException as e:
         raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,
             error=e.detail
@@ -75,7 +75,7 @@ async def delete_document(
 ):
     try:
         await document_service.delete_document(doc_id)
-    except DocumentNoFoundException as e:
+    except DocumentNotFoundException as e:
         raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,
             error=e.detail
@@ -88,7 +88,7 @@ async def get_download_url_document(
 ):
     try:
         return await document_service.get_download_url(doc_id)
-    except DocumentNoFoundException as e:
+    except DocumentNotFoundException as e:
         raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,
             error=e.detail

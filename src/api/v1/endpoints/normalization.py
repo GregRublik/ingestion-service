@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 from services.normalization import NormalizationService
 
 from depends import get_normalization_service
-from exceptions import DocumentNoFoundException, DocumentException, APIException
+from exceptions import DocumentNotFoundException, DocumentException, APIException
 
 router = APIRouter()
 
@@ -13,7 +13,7 @@ async def normalize_document(
 ):
     try:
         await normalization_service.normalize_document(doc_id)
-    except DocumentNoFoundException as e:
+    except DocumentNotFoundException as e:
         raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,
             error=e.detail

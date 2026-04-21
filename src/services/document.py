@@ -2,8 +2,8 @@ import os
 from typing import Optional, List
 
 from exceptions import (
-    DocumentNoFoundException,
-    ModelNoFoundException,
+    DocumentNotFoundException,
+    ModelNotFoundException,
     DocumentAlreadyExistsException,
     ModelAlreadyExistsException
 )
@@ -76,8 +76,8 @@ class DocumentService:
                 document = await self.document_repository.get_by_id(self.uow.session, doc_id)
                 await self.aws_repository.delete_document(settings.aws.bucket_name, document.file_name)
                 await self.document_repository.delete_by_id(self.uow.session, doc_id)
-            except ModelNoFoundException:
-                raise DocumentNoFoundException
+            except ModelNotFoundException:
+                raise DocumentNotFoundException
 
     async def get_download_url(self, doc_id: int) -> DocumentDownloadUrlResponse:
         async with self.uow:
@@ -85,5 +85,5 @@ class DocumentService:
                 document_db = await self.document_repository.get_by_id(self.uow.session, doc_id)
                 url = await self.aws_repository.get_download_url(settings.aws.bucket_name, document_db.file_name)
                 return DocumentDownloadUrlResponse(url=url)
-            except ModelNoFoundException:
-                raise DocumentNoFoundException
+            except ModelNotFoundException:
+                raise DocumentNotFoundException

@@ -3,7 +3,7 @@ from models.document import Document
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import NoResultFound
-from exceptions import ModelNoFoundException
+from exceptions import ModelNotFoundException
 
 
 class DocumentRepository(SQLAlchemyRepository):
@@ -15,4 +15,4 @@ class DocumentRepository(SQLAlchemyRepository):
             res = await session.execute(stmt)
             return res.scalars().all()
         except NoResultFound:
-            raise ModelNoFoundException
+            raise ModelNotFoundException

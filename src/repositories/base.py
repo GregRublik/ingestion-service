@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import insert, select, update, delete
 from sqlalchemy.exc import IntegrityError, NoResultFound, MultipleResultsFound
 
-from exceptions import ModelAlreadyExistsException, ModelNoFoundException, ModelMultipleResultsFoundException
+from exceptions import ModelAlreadyExistsException, ModelNotFoundException, ModelMultipleResultsFoundException
 
 class AbstractRepository(ABC):
     """
@@ -46,7 +46,7 @@ class SQLAlchemyRepository(AbstractRepository):
             res = await session.execute(stmt)
             return res.scalar_one()
         except NoResultFound:
-            raise ModelNoFoundException
+            raise ModelNotFoundException
 
     async def delete_by_id(
         self,
@@ -64,7 +64,7 @@ class SQLAlchemyRepository(AbstractRepository):
         obj = res.scalar_one_or_none()
 
         if obj is None:
-            raise ModelNoFoundException
+            raise ModelNotFoundException
 
         return obj
 
@@ -74,7 +74,7 @@ class SQLAlchemyRepository(AbstractRepository):
             res = await session.execute(stmt)
             return res.scalars().all()
         except NoResultFound:
-            raise ModelNoFoundException
+            raise ModelNotFoundException
 
     async def get_by_id(self, session: AsyncSession, object_id: int | UUID4):
         stmt = select(self.model).where(self.model.id == object_id).limit(1)
@@ -82,6 +82,6 @@ class SQLAlchemyRepository(AbstractRepository):
             res = await session.execute(stmt)
             return res.scalar_one()
         except NoResultFound:
-            raise ModelNoFoundException
+            raise ModelNotFoundException
         except MultipleResultsFound:
             raise ModelMultipleResultsFoundException

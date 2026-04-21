@@ -13,13 +13,13 @@ class DatabaseUnavailableException(Exception):
 class ModelAlreadyExistsException(BaseException):
     """Объект уже существует"""
 
-class ModelNoFoundException(BaseException):
+class ModelNotFoundException(BaseException):
     """Объект не найден"""
 
 class ModelMultipleResultsFoundException(BaseException):
     """При ожидании одного объекта нашлось несколько экземпляров"""
 
-class DocumentNoFoundException(ModelNoFoundException):
+class DocumentNotFoundException(ModelNotFoundException):
     """Документ не найден"""
     detail = "document not found"
 

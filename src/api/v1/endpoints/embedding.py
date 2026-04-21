@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from services.embedding import EmbeddingService
 from depends import get_embedding_service
-from exceptions import APIException, DocumentNoFoundException
+from exceptions import APIException, DocumentNotFoundException
 
 router = APIRouter()
 
@@ -13,7 +13,7 @@ async def embedding_document(
     try:
         return await embedding_service.embedding_document(doc_id)
 
-    except DocumentNoFoundException as e:
+    except DocumentNotFoundException as e:
         raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,
             error=e.detail
