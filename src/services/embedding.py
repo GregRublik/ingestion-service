@@ -38,8 +38,6 @@ class EmbeddingService:
             )
 
             try:
-                document.status = DocumentStatus.PROCESSING
-
                 # 1. загрузка чанков
                 file_obj = await self.aws_repository.get_document(
                     settings.aws.bucket_name,
@@ -60,10 +58,14 @@ class EmbeddingService:
 
                 # 3. готовим точки для Qdrant
                 points = []
+                c = 0
                 for i, (chunk, vector) in enumerate(zip(chunks, vectors)):
+                    c += 1
                     points.append({
                         "id": i,
-                        "vector": vector,
+                        "vector": {
+                            f"abstract-vector-name": vector  # имя должно совпадать с коллекцией
+                        },
                         "payload": {
                             "text": chunk["text"],
                             "doc_id": doc_id,
@@ -73,9 +75,6 @@ class EmbeddingService:
 
                 # 4. сохраняем в Qdrant
                 await self.qdrant_repository.upsert(points)
-
-                # 5. статус
-                document.status = DocumentStatus.DONE
 
                 return {"status": "ok", "vectors": len(points)}
 

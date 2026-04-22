@@ -105,7 +105,7 @@ class ChunkService:
         return await self.document_repository.add_one(
             self.uow.session,
             {
-                "file_name": f"{filename}.chunks.json",
+                "file_name": f"{filename}.json",
                 "file_type": "application/json",
                 "file_extension": ".json",
                 "file_size": len(payload),

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 from services.embedding import EmbeddingService
 from depends import get_embedding_service
 from exceptions import APIException, DocumentNotFoundException
+from config import settings
 
 router = APIRouter()
 

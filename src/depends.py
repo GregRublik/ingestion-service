@@ -21,7 +21,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 
 def get_vectordb_client() -> AsyncQdrantClient:
     return AsyncQdrantClient(
-        url=f"https://{settings.vdb.host}:{settings.vdb.port}",
+        url=f"http://{settings.vdb.host}:{settings.vdb.port}",
     )
 
 # REPOSITORIES
