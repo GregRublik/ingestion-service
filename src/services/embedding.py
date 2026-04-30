@@ -52,7 +52,7 @@ class EmbeddingService:
                 chunks = chunk_data["chunks"]
 
                 # 2. считаем эмбеддинги
-                texts = [c["text"] for c in chunks]
+                texts = [chunk["text"] for chunk in chunks]
 
                 vectors = await self.model.aembed_documents(texts)
 
@@ -63,13 +63,11 @@ class EmbeddingService:
                     c += 1
                     points.append({
                         "id": i,
-                        "vector": {
-                            f"abstract-vector-name": vector  # имя должно совпадать с коллекцией
-                        },
+                        "vector": vector,
                         "payload": {
                             "text": chunk["text"],
                             "doc_id": doc_id,
-                            **chunk["metadata"]
+                            "metadata": chunk["metadata"],
                         }
                     })
 
