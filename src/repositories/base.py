@@ -69,7 +69,7 @@ class SQLAlchemyRepository(AbstractRepository):
         return obj
 
     async def get_all(self, session: AsyncSession):
-        stmt = select(self.model)
+        stmt = select(self.model).order_by(self.model.id) # self.model.id.desc()
         try:
             res = await session.execute(stmt)
             return res.scalars().all()
