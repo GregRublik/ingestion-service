@@ -60,13 +60,15 @@ class EmbeddingService:
                 points = []
                 c = 0
                 for i, (chunk, vector) in enumerate(zip(chunks, vectors)):
+                    print(vector)
                     c += 1
+                    chunk["metadata"]["doc_id"] = doc_id
+                    chunk["metadata"]["doc_name"] = document.file_name
                     points.append({
                         "id": i,
                         "vector": vector,
                         "payload": {
                             "text": chunk["text"],
-                            "doc_id": doc_id,
                             "metadata": chunk["metadata"],
                         }
                     })
