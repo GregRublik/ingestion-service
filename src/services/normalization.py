@@ -96,10 +96,9 @@ class NormalizationService:
 
 
             except Exception as e:
-                print(str(e)[::500])
                 document_db.status = DocumentStatus.FAILED
-                # document_db.error_message = str(e)[::500]
-                return document_db
+                document_db.error_message = str(e)[:500:]
+                raise e
 
     # ========================
     # TEXT / JSON
@@ -230,9 +229,11 @@ class NormalizationService:
 
         if params_normalize.strategy == StrategyMode.questions_and_answers:
             key = f"normalized/{filename}.json"
-            payload = normalized_data
+            # payload = normalized_data
             file_extension = ".json"
             file_type = "application/json"
+
+            payload = json.dumps(normalized_data, ensure_ascii=False).encode("utf-8")
         else:
 
             key = f"normalized/{filename}.md"
@@ -248,7 +249,7 @@ class NormalizationService:
         print(result_push)
 
         document_db = await self.document_repository.add_one(self.uow.session,{
-                    "file_name": f"{filename}{file_extension}",
+                    "file_name": f"normalized-{filename}{file_extension}",
                     "file_type": file_type,
                     "file_extension": file_extension,
                     "file_size": len(payload),
