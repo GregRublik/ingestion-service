@@ -8,6 +8,7 @@ class DatabaseUnavailableException(Exception):
 
     def __init__(self, _original_error: Exception):
         self.error = f"Database unavailable." # print(_original_error: Exception)
+        print(_original_error)
         super().__init__(self.error)
 
 class ModelAlreadyExistsException(BaseException):
