@@ -224,7 +224,7 @@ class NormalizationService:
         parent_doc: Document,
         normalized_data,
         params_normalize: ParamsNormalize
-    ) -> str:
+    ) -> Document:
 
         filename = Path(parent_doc.file_name).stem
 
@@ -240,11 +240,12 @@ class NormalizationService:
             file_extension = ".md"
             file_type = "text/markdown"
 
-        await self.aws_repository.push_document(
+        result_push = await self.aws_repository.push_document(
             settings.aws.bucket_name,
             key,
             payload
         )
+        print(result_push)
 
         document_db = await self.document_repository.add_one(self.uow.session,{
                     "file_name": f"{filename}{file_extension}",
