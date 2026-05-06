@@ -7,6 +7,7 @@ from repositories.aws import AWSRepository
 from services.unit_of_work import UnitOfWork
 from config import settings
 from models.document import Document, DocumentStatus
+from schemas.document import ParamsNormalize, StrategyMode
 
 from docling.document_converter import DocumentConverter
 from docling.datamodel.document import DocumentStream
@@ -32,7 +33,7 @@ class NormalizationService:
         self.aws_repository = aws_repository
         self.uow = uow
 
-        self.parsers: dict[str, Callable[[any], Awaitable[dict]]] = {
+        self.parsers = {
             ".pdf": self.normalize_with_docling,
             ".png": self.normalize_with_docling,
             ".jpg": self.normalize_with_docling,
@@ -45,11 +46,17 @@ class NormalizationService:
 
         self.converter = DocumentConverter()
 
+    def get_handler_normalization(self, file_extension):
+
+        handler = self.parsers[file_extension]
+
+        return handler
+
     # ========================
     # PUBLIC API
     # ========================
 
-    async def normalize_document(self, doc_id: int):
+    async def normalize_document(self, doc_id: int, params_normalize: ParamsNormalize):
         async with self.uow:
             document_db = await self.document_repository.get_by_id(
                 self.uow.session, doc_id
@@ -67,23 +74,31 @@ class NormalizationService:
                 content: StreamingBody = file_obj["body"]
                 cont = await content.read()
 
-                # Создаем DocumentStream из байтов
-                doc_stream = DocumentStream(
-                    name=document_db.file_name,  # имя файла
-                    stream=BytesIO(cont)  # передаем как поток
-                )
-                result = self.converter.convert(doc_stream).document
-                print("res: ", result.export_to_markdown())
+                handler = self.get_handler_normalization(document_db.file_extension)
+
+                result = await handler(cont, params_normalize)
 
                 return await self.save_normalized(
-                    document_db, result.export_to_markdown()
+                    document_db, result, params_normalize
                 )
+
+                # # Создаем DocumentStream из байтов
+                # doc_stream = DocumentStream(
+                #     name=document_db.file_name,  # имя файла
+                #     stream=BytesIO(cont)  # передаем как поток
+                # )
+                # result = self.converter.convert(doc_stream).document
+                # print("res: ", result.export_to_markdown())
+                #
+                # return await self.save_normalized(
+                #     document_db, result.export_to_markdown()
+                # )
 
 
             except Exception as e:
-                print(e)
+                print(str(e)[::500])
                 document_db.status = DocumentStatus.FAILED
-                document_db.error_message = str(e)
+                # document_db.error_message = str(e)[::500]
                 return document_db
 
     # ========================
@@ -91,7 +106,7 @@ class NormalizationService:
     # ========================
 
     @staticmethod
-    async def normalize_text(content: bytes) -> dict:
+    async def normalize_text(content: bytes, params_normalize: ParamsNormalize) -> dict:
         text = content.decode("utf-8", errors="ignore")
         text = NormalizationService._clean_text(text)
 
@@ -111,44 +126,29 @@ class NormalizationService:
         }
 
     @staticmethod
-    async def normalize_json(content: bytes) -> dict:
+    async def normalize_json(content: bytes, params_normalize: ParamsNormalize):
         data = json.loads(content.decode("utf-8"))
 
-        entries = []
+        if params_normalize.strategy == StrategyMode.questions_and_answers:
+            normalized_questions = []
+            questions = data["data"]["questions"]
+            for question in questions:
 
-        def flatten(obj, path=""):
-            if isinstance(obj, dict):
-                for k, v in obj.items():
-                    flatten(v, f"{path}.{k}" if path else k)
-            elif isinstance(obj, list):
-                for i, v in enumerate(obj):
-                    flatten(v, f"{path}[{i}]")
-            else:
-                entries.append({
-                    "path": path,
-                    "value": str(obj)
-                })
+                normalized_questions.append(
+                    {
+                        "question": question["text"],
+                        "answer": question["answer"]["text"],
+                        "imt_id": question["productDetails"]["imtId"],
+                        "nm_id": question["productDetails"]["nmId"],
+                        "product_name": question["productDetails"]["productName"]
+                    }
+                )
 
-        flatten(data)
+            return {"results": normalized_questions}
 
-        content_text = "\n".join(
-            f"{e['path']}: {e['value']}" for e in entries
-        )
+        return data
 
-        return {
-            "type": "json",
-            "content": content_text,
-            "structure": entries,
-            "metadata": {
-                "entries": len(entries)
-            }
-        }
-
-    # ========================
-    # DOCLING (CPU-bound → thread pool)
-    # ========================
-
-    async def normalize_with_docling(self, streaming_body) -> dict:
+    async def normalize_with_docling(self, streaming_body, strategy: ParamsNormalize) -> dict:
         loop = asyncio.get_running_loop()
 
         import os
@@ -222,12 +222,23 @@ class NormalizationService:
     async def save_normalized(
         self,
         parent_doc: Document,
-        normalized_data
+        normalized_data,
+        params_normalize: ParamsNormalize
     ) -> str:
-        filename = Path(parent_doc.file_name).stem
-        key = f"normalized/{filename}.md"
 
-        payload = normalized_data
+        filename = Path(parent_doc.file_name).stem
+
+        if params_normalize.strategy == StrategyMode.questions_and_answers:
+            key = f"normalized/{filename}.json"
+            payload = normalized_data
+            file_extension = ".json"
+            file_type = "application/json"
+        else:
+
+            key = f"normalized/{filename}.md"
+            payload = normalized_data
+            file_extension = ".md"
+            file_type = "text/markdown"
 
         await self.aws_repository.push_document(
             settings.aws.bucket_name,
@@ -236,9 +247,9 @@ class NormalizationService:
         )
 
         document_db = await self.document_repository.add_one(self.uow.session,{
-                    "file_name": f"{filename}.md",
-                    "file_type": "text/markdown",
-                    "file_extension": ".md",
+                    "file_name": f"{filename}{file_extension}",
+                    "file_type": file_type,
+                    "file_extension": file_extension,
                     "file_size": len(payload),
                     "storage_path": f"s3://{settings.aws.bucket_name}/{key}",
                     "status": DocumentStatus.NORMALIZED,
