@@ -6,6 +6,9 @@ class AWSSettings(BaseSettings):
     secret_key: str
     bucket_name: str
 
+    base_bucket: str
+    questions_bucket: str
+
     model_config = SettingsConfigDict(env_file=".env", env_prefix="AWS_", extra="ignore")
 
 class QueueSettings(BaseSettings):

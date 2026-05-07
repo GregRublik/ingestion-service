@@ -7,7 +7,7 @@ from schemas.document import DocumentResponse
 
 from depends import get_chunk_service
 
-from exceptions import DocumentNotFoundException, APIException, DocumentException
+from exceptions import DocumentNotFoundException, APIException, DocumentException, DocumentAlreadyExistsException
 
 router = APIRouter()
 
@@ -31,5 +31,10 @@ async def chunk_document(
     except DocumentException as e:
         raise APIException(
             status_code=status.HTTP_400_BAD_REQUEST,
+            error=e.detail
+        )
+    except DocumentAlreadyExistsException as e:
+        raise APIException(
+            status_code=status.HTTP_409_CONFLICT,
             error=e.detail
         )

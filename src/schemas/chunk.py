@@ -8,6 +8,7 @@ class ChunkType(StrEnum):
     char = 'char'
     markdown = 'markdown'
     semantic = 'semantic'
+    questions_and_answers = 'questions_and_answers'
 
 class ChunkRequest(BaseModel):
     chunk_type: ChunkType

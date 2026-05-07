@@ -61,30 +61,56 @@ class ChunkService:
         cont = await content.read()
 
         text = cont.decode("utf-8", errors="ignore")  # ✅ важно
-
-        splitter = self._get_splitter(chunk_type, params, self.embedding_service.model)
-
-        raw_chunks = splitter.split_text(text)
-
-        chunks = [
-            {
-                "id": i,
-                "text": chunk,
-                "metadata": {
-                    "chunk_index": i,
-                    "length": len(chunk)
+        print(text[:100:])
+        if chunk_type == ChunkType.questions_and_answers:
+            # questions_and_answers = json.dumps(text, ensure_ascii=False).encode("utf-8")
+            questions_and_answers = json.loads(text)
+            chunks = [
+                {
+                    "id": i,
+                    "question": question_and_answer.get("question"),
+                    "answer": question_and_answer.get("answer"),
+                    "product_name": question_and_answer.get("product_name"),
+                    "product_id": question_and_answer.get("imt_id"), # todo либо nm_id
+                    "metadata": {
+                        "chunk_index": i,
+                        "length": len(question_and_answer)
+                    }
+                }
+                for i, question_and_answer in enumerate(questions_and_answers["results"])
+            ]
+            return {
+                "chunks": chunks,
+                "meta": {
+                    "chunk_type": chunk_type,
+                    "params": params
                 }
             }
-            for i, chunk in enumerate(raw_chunks)
-        ]
+        else:
 
-        return {
-            "chunks": chunks,
-            "meta": {
-                "chunk_type": chunk_type,
-                "params": params
+            splitter = self._get_splitter(chunk_type, params, self.embedding_service.model)
+
+            raw_chunks = splitter.split_text(text)
+
+            chunks = [
+                {
+                    "id": i,
+                    "text": chunk,
+                    "metadata": {
+                        "chunk_index": i,
+                        "length": len(chunk)
+                    }
+                }
+                for i, chunk in enumerate(raw_chunks)
+            ]
+
+            return {
+                "chunks": chunks,
+                "meta": {
+                    "chunk_type": chunk_type,
+                    "params": params
+                }
             }
-        }
 
     async def save_chunks(
             self,
@@ -106,7 +132,7 @@ class ChunkService:
         return await self.document_repository.add_one(
             self.uow.session,
             {
-                "file_name": f"{filename}.json",
+                "file_name": f"chunks-{filename}.json",
                 "file_type": "application/json",
                 "file_extension": ".json",
                 "file_size": len(payload),
