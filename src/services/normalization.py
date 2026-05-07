@@ -2,6 +2,7 @@ import tempfile
 
 from aiobotocore.response import StreamingBody
 
+from exceptions import ModelAlreadyExistsException, DocumentAlreadyExistsException
 from repositories.document import DocumentRepository
 from repositories.aws import AWSRepository
 from services.unit_of_work import UnitOfWork
@@ -52,57 +53,35 @@ class NormalizationService:
 
         return handler
 
-    # ========================
-    # PUBLIC API
-    # ========================
-
     async def normalize_document(self, doc_id: int, params_normalize: ParamsNormalize):
         async with self.uow:
-            document_db = await self.document_repository.get_by_id(
-                self.uow.session, doc_id
-            )
-
             try:
-                # 1. статус
-                document_db.status = DocumentStatus.PROCESSING
+                    document_db = await self.document_repository.get_by_id(
+                        self.uow.session, doc_id
+                    )
+                    # 1. статус
+                    document_db.status = DocumentStatus.PROCESSING
 
 
-                file_obj = await self.aws_repository.get_document(
-                    settings.aws.bucket_name, document_db.file_name
-                )
+                    file_obj = await self.aws_repository.get_document(
+                        settings.aws.bucket_name, document_db.file_name
+                    )
 
-                content: StreamingBody = file_obj["body"]
-                cont = await content.read()
+                    content: StreamingBody = file_obj["body"]
+                    cont = await content.read()
 
-                handler = self.get_handler_normalization(document_db.file_extension)
+                    handler = self.get_handler_normalization(document_db.file_extension)
 
-                result = await handler(cont, params_normalize)
+                    result = await handler(cont, params_normalize)
 
-                return await self.save_normalized(
-                    document_db, result, params_normalize
-                )
+                    return await self.save_normalized(
+                        document_db, result, params_normalize
+                    )
 
-                # # Создаем DocumentStream из байтов
-                # doc_stream = DocumentStream(
-                #     name=document_db.file_name,  # имя файла
-                #     stream=BytesIO(cont)  # передаем как поток
-                # )
-                # result = self.converter.convert(doc_stream).document
-                # print("res: ", result.export_to_markdown())
-                #
-                # return await self.save_normalized(
-                #     document_db, result.export_to_markdown()
-                # )
-
-
-            except Exception as e:
+            except ModelAlreadyExistsException as e:
                 document_db.status = DocumentStatus.FAILED
-                document_db.error_message = str(e)[:500:]
-                raise e
-
-    # ========================
-    # TEXT / JSON
-    # ========================
+                document_db.error_message = e
+                raise DocumentAlreadyExistsException
 
     @staticmethod
     async def normalize_text(content: bytes, params_normalize: ParamsNormalize) -> dict:
@@ -166,6 +145,18 @@ class NormalizationService:
                 self._normalize_with_docling_sync,
                 tmp.name
             )
+            # todo изначальная нормализация
+            # # Создаем DocumentStream из байтов
+            # doc_stream = DocumentStream(
+            #     name=document_db.file_name,  # имя файла
+            #     stream=BytesIO(cont)  # передаем как поток
+            # )
+            # result = self.converter.convert(doc_stream).document
+            # print("res: ", result.export_to_markdown())
+            #
+            # return await self.save_normalized(
+            #     document_db, result.export_to_markdown()
+            # )
 
         finally:
             try:
@@ -214,10 +205,6 @@ class NormalizationService:
             }
         }
 
-    # ========================
-    # SAVE
-    # ========================
-
     async def save_normalized(
         self,
         parent_doc: Document,
@@ -228,7 +215,7 @@ class NormalizationService:
         filename = Path(parent_doc.file_name).stem
 
         if params_normalize.strategy == StrategyMode.questions_and_answers:
-            key = f"normalized/{filename}.json"
+            key = f"normalized/normalized-{filename}.json"
             # payload = normalized_data
             file_extension = ".json"
             file_type = "application/json"
@@ -241,13 +228,6 @@ class NormalizationService:
             file_extension = ".md"
             file_type = "text/markdown"
 
-        result_push = await self.aws_repository.push_document(
-            settings.aws.bucket_name,
-            key,
-            payload
-        )
-        print(result_push)
-
         document_db = await self.document_repository.add_one(self.uow.session,{
                     "file_name": f"normalized-{filename}{file_extension}",
                     "file_type": file_type,
@@ -257,11 +237,13 @@ class NormalizationService:
                     "status": DocumentStatus.NORMALIZED,
                 })
 
-        return document_db
+        await self.aws_repository.push_document(
+            settings.aws.bucket_name,
+            key,
+            payload
+        )
 
-    # ========================
-    # UTILS
-    # ========================
+        return document_db
 
     @staticmethod
     def _clean_text(text: str) -> str:

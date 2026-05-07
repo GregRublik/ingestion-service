@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status
 from services.normalization import NormalizationService
 
 from depends import get_normalization_service
-from exceptions import DocumentNotFoundException, DocumentException, APIException
+from exceptions import DocumentNotFoundException, DocumentException, APIException, DocumentAlreadyExistsException
 from schemas.document import DocumentResponse, ParamsNormalize
 
 router = APIRouter()
@@ -24,5 +24,10 @@ async def normalize_document(
     except DocumentException as e:
         raise APIException(
             status_code=status.HTTP_400_BAD_REQUEST,
+            error=e.detail
+        )
+    except DocumentAlreadyExistsException as e:
+        raise APIException(
+            status_code=status.HTTP_409_CONFLICT,
             error=e.detail
         )
