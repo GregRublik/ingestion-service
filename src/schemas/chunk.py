@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Literal, Dict, Any
 from enum import StrEnum
+from config import settings
 
 
 class ChunkType(StrEnum):
@@ -8,7 +9,7 @@ class ChunkType(StrEnum):
     char = 'char'
     markdown = 'markdown'
     semantic = 'semantic'
-    questions_and_answers = 'questions_and_answers'
+    questions = settings.vdb.questions_collection
 
 class ChunkRequest(BaseModel):
     chunk_type: ChunkType

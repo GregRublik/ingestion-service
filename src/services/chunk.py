@@ -62,7 +62,7 @@ class ChunkService:
 
         text = cont.decode("utf-8", errors="ignore")  # ✅ важно
         print(text[:100:])
-        if chunk_type == ChunkType.questions_and_answers:
+        if chunk_type == ChunkType.questions:
             # questions_and_answers = json.dumps(text, ensure_ascii=False).encode("utf-8")
             questions_and_answers = json.loads(text)
             chunks = [

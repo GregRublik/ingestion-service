@@ -4,8 +4,6 @@ from depends import get_embedding_service
 from exceptions import APIException, DocumentNotFoundException
 
 from schemas.embedding import ParamsVectorization
-from config import settings
-
 router = APIRouter()
 
 @router.post("/documents/{doc_id}/embedding")

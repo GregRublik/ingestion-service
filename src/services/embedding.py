@@ -1,10 +1,11 @@
 from aiobotocore.response import StreamingBody
 from langchain_core.embeddings import Embeddings
+import asyncio
 
 from repositories.aws import AWSRepository
 from repositories.document import DocumentRepository
 from repositories.qdrant import QdrantRepository
-from schemas.embedding import ParamsVectorization, VectorStrategy
+from schemas.embedding import ParamsVectorization, Collections
 from services.unit_of_work import UnitOfWork
 from models.document import DocumentStatus
 from config import settings
@@ -30,6 +31,25 @@ class EmbeddingService:
     def get_embedding(self) -> Embeddings:
         return self.model
 
+    async def create_vectors(self, field_vector: str, elements: list[dict]):
+        texts = []
+        for element in elements:
+            texts.append(element[field_vector])
+        return await self.model.aembed_documents(texts)
+
+    async def get_chunks(self, collection: str, file_name: str):
+        # 1. загрузка чанков
+        file_obj = await self.aws_repository.get_document(
+            settings.aws.bucket_name,
+            f"chunks/{collection}/{file_name}"
+        )
+
+        content: StreamingBody = file_obj["body"]
+        raw = await content.read()
+        chunk_data = json.loads(raw)
+        return chunk_data["chunks"]
+
+
     async def embedding_document(self, doc_id: int, params_vectorization: ParamsVectorization):
 
         async with self.uow:
@@ -39,27 +59,11 @@ class EmbeddingService:
             )
 
             try:
-                print(settings.aws.bucket_name, f"chunks/questions_and_answers/{document.file_name}")
-                # 1. загрузка чанков
-                file_obj = await self.aws_repository.get_document(
-                    settings.aws.bucket_name,
-                    f"chunks/questions_and_answers/{document.file_name}"
-                )
 
+                chunks = await self.get_chunks(params_vectorization.collection, document.file_name)
 
-                content: StreamingBody = file_obj["body"]
-                raw = await content.read()
-
-                chunk_data = json.loads(raw)
-
-                chunks = chunk_data["chunks"]
-
-                if params_vectorization.strategy == VectorStrategy.base:
-
-                    # 2. считаем эмбеддинги
-                    texts = [chunk["text"] for chunk in chunks]
-
-                    vectors = await self.model.aembed_documents(texts)
+                if params_vectorization.collection == Collections.base:
+                    vectors = await self.create_vectors("text", chunks)
 
                     # 3. готовим точки для Qdrant
                     points = []
@@ -83,9 +87,8 @@ class EmbeddingService:
 
                     return {"status": "ok", "vectors": len(points)}
 
-                elif params_vectorization.strategy == VectorStrategy.question_answer:
-                    texts = [chunk["question"] for chunk in chunks]
-                    vectors = await self.model.aembed_documents(texts)
+                elif params_vectorization.collection == Collections.questions:
+                    vectors = await self.create_vectors("question", chunks)
 
 
                     points = []
@@ -107,7 +110,14 @@ class EmbeddingService:
                         })
 
                     # 4. сохраняем в Qdrant
-                    await self.qdrant_repository.upsert(points, params_vectorization.collection)
+
+                    await asyncio.gather(*[
+                        self.qdrant_repository.upsert(
+                            points[i:i + 10],
+                            params_vectorization.collection,
+                        )
+                        for i in range(0, len(points), 10)
+                    ])
 
                     return {"status": "ok", "vectors": len(points)}
 
