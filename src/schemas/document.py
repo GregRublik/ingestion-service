@@ -1,8 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Literal
-from enum import StrEnum
+from typing import Optional, Dict
 
 class DocumentStatus(str, Enum):
     UPLOADED = "uploaded"
@@ -51,11 +50,3 @@ class DocumentMetadataResponse(BaseModel):
 
 class DocumentDownloadUrlResponse(BaseModel):
     url: str
-
-
-class StrategyMode(StrEnum):
-    base = "base"
-    questions_and_answers = "questions_and_answers"
-
-class ParamsNormalize(BaseModel):
-    strategy: StrategyMode

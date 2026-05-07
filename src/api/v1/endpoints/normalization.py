@@ -3,7 +3,8 @@ from services.normalization import NormalizationService
 
 from depends import get_normalization_service
 from exceptions import DocumentNotFoundException, DocumentException, APIException, DocumentAlreadyExistsException
-from schemas.document import DocumentResponse, ParamsNormalize
+from schemas.document import DocumentResponse
+from schemas.normalize import ParamsNormalize
 
 router = APIRouter()
 

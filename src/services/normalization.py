@@ -8,7 +8,7 @@ from repositories.aws import AWSRepository
 from services.unit_of_work import UnitOfWork
 from config import settings
 from models.document import Document, DocumentStatus
-from schemas.document import ParamsNormalize, StrategyMode
+from schemas.normalize import ParamsNormalize, StrategyMode
 
 from docling.document_converter import DocumentConverter
 from docling.datamodel.document import DocumentStream
