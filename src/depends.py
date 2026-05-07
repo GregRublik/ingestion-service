@@ -38,7 +38,7 @@ def get_qdrant_repository(
 ) -> QdrantRepository:
     return QdrantRepository(
         client,
-        settings.vdb.collection_name
+        settings.vdb.base_collection
     )
 
 # SERVICES

@@ -39,11 +39,13 @@ class EmbeddingService:
             )
 
             try:
+                print(settings.aws.bucket_name, f"chunks/questions_and_answers/{document.file_name}")
                 # 1. загрузка чанков
                 file_obj = await self.aws_repository.get_document(
                     settings.aws.bucket_name,
-                    f"chunks/semantic/{document.file_name}"
+                    f"chunks/questions_and_answers/{document.file_name}"
                 )
+
 
                 content: StreamingBody = file_obj["body"]
                 raw = await content.read()
@@ -89,7 +91,6 @@ class EmbeddingService:
                     points = []
                     c = 0
                     for i, (chunk, vector) in enumerate(zip(chunks, vectors)):
-                        print(vector)
                         c += 1
                         chunk["metadata"]["doc_id"] = doc_id
                         chunk["metadata"]["doc_name"] = document.file_name
@@ -106,7 +107,7 @@ class EmbeddingService:
                         })
 
                     # 4. сохраняем в Qdrant
-                    await self.qdrant_repository.upsert(points)
+                    await self.qdrant_repository.upsert(points, params_vectorization.collection)
 
                     return {"status": "ok", "vectors": len(points)}
 

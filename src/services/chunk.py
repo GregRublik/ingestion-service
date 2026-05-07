@@ -119,7 +119,7 @@ class ChunkService:
             chunk_type: str
     ) -> Document:
         filename = Path(parent_doc.file_name).stem
-        key = f"chunks/{chunk_type}/{filename}.json"
+        key = f"chunks/{chunk_type}/chunks-{filename}.json"
 
         payload = json.dumps(chunk_data, ensure_ascii=False).encode("utf-8")
 
