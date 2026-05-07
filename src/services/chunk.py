@@ -14,6 +14,7 @@ from langchain_text_splitters import (
 )
 from config import settings
 from repositories.document import DocumentRepository
+from schemas.chunk import ChunkType
 from services.embedding import EmbeddingService
 from services.unit_of_work import UnitOfWork
 
@@ -47,7 +48,7 @@ class ChunkService:
     async def chunk(
             self,
             doc: Document,
-            chunk_type: Literal["recursive", "char", "markdown", "semantic"],
+            chunk_type: ChunkType,
             params: dict
     ):
 
@@ -118,7 +119,7 @@ class ChunkService:
     async def chunk_document(
             self,
             doc_id: int,
-            chunk_type: Literal["recursive", "char", "markdown", "semantic"],
+            chunk_type: ChunkType,
             params: dict
     ) -> Document:
         async with self.uow:
