@@ -77,7 +77,7 @@ class EmbeddingService:
                         })
 
                     # 4. сохраняем в Qdrant
-                    await self.qdrant_repository.upsert(points)
+                    await self.qdrant_repository.upsert(points, params_vectorization.collection)
 
                     return {"status": "ok", "vectors": len(points)}
 

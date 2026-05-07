@@ -3,14 +3,14 @@ from enum import StrEnum
 
 from config import settings
 
-class Buckets(StrEnum):
-    base = settings.aws.base_bucket
-    questions = settings.aws.questions_bucket
+class Collections(StrEnum):
+    base = settings.vdb.base_collection
+    questions = settings.vdb.questions_collection
 
 class VectorStrategy(StrEnum):
     base = "base"
     question_answer = "question_answer"
 
 class ParamsVectorization(BaseModel):
-    bucket: Buckets
+    collection: Collections
     strategy: VectorStrategy

@@ -6,9 +6,6 @@ class AWSSettings(BaseSettings):
     secret_key: str
     bucket_name: str
 
-    base_bucket: str
-    questions_bucket: str
-
     model_config = SettingsConfigDict(env_file=".env", env_prefix="AWS_", extra="ignore")
 
 class QueueSettings(BaseSettings):
@@ -36,7 +33,9 @@ class VDBSettings(BaseSettings):
     port: int
     embedding_model: str
     device: str
-    collection_name: str
+
+    base_collection: str
+    questions_collection: str
 
     model_config = SettingsConfigDict(env_file=".env", env_prefix="VDB_", extra="ignore")
 
