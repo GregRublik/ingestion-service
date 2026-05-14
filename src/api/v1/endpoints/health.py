@@ -2,12 +2,10 @@ from fastapi import APIRouter
 from datetime import datetime
 
 from schemas.health import ResponseHealth, ResponseReady, ResponseLive, Status
-from schemas.response import APIResponse
-
-from response import ok, UnifiedResponseRoute
+from schemas.response import APIResponse, ok
 
 
-router = APIRouter(route_class=UnifiedResponseRoute)
+router = APIRouter()
 
 
 @router.get("/health", response_model=APIResponse[ResponseHealth])

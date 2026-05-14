@@ -3,14 +3,13 @@ from fastapi import APIRouter, Depends, status
 from services.normalization import NormalizationService
 from schemas.document import DocumentResponse
 from schemas.normalize import ParamsNormalize
-from schemas.response import APIResponse
+from schemas.response import APIResponse, ok
 
-from response import ok, UnifiedResponseRoute
 from depends import get_normalization_service
 from exceptions import DocumentNotFoundException, DocumentException, APIException, DocumentAlreadyExistsException
 
 
-router = APIRouter(prefix="/documents", route_class=UnifiedResponseRoute)
+router = APIRouter(prefix="/documents")
 
 
 @router.post("/{doc_id}/normalize", response_model=APIResponse[DocumentResponse])

@@ -6,13 +6,12 @@ from config import settings
 from services.document import DocumentService
 from depends import get_document_service
 from schemas.document import DocumentResponse, DocumentUpdate, DocumentDownloadUrlResponse
-from schemas.response import APIResponse
+from schemas.response import APIResponse, ok
 from exceptions import DocumentNotFoundException, APIException, DocumentException, DocumentAlreadyExistsException
 
-from response import ok, UnifiedResponseRoute
 
 
-router = APIRouter(prefix="/documents", route_class=UnifiedResponseRoute)
+router = APIRouter(prefix="/documents")
 
 
 @router.post("/", response_model=APIResponse[List[DocumentResponse]])

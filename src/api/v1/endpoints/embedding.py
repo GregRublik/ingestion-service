@@ -2,14 +2,13 @@ from fastapi import APIRouter, Depends, status
 
 from services.embedding import EmbeddingService
 from schemas.embedding import ParamsVectorization, ResponseVectorization
-from schemas.response import APIResponse
+from schemas.response import APIResponse, ok
 
-from response import ok, UnifiedResponseRoute
 from depends import get_embedding_service
 from exceptions import APIException, DocumentNotFoundException
 
 
-router = APIRouter(prefix="/documents", route_class=UnifiedResponseRoute)
+router = APIRouter(prefix="/documents")
 
 
 @router.post("/{doc_id}/embedding", response_model=APIResponse[ResponseVectorization])

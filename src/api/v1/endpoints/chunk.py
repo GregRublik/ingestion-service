@@ -4,14 +4,13 @@ from services.chunk import ChunkService
 
 from schemas.chunk import ChunkRequest
 from schemas.document import DocumentResponse
-from schemas.response import APIResponse
+from schemas.response import APIResponse, ok
 
 from depends import get_chunk_service
 from exceptions import DocumentNotFoundException, APIException, DocumentException, DocumentAlreadyExistsException
-from response import ok, UnifiedResponseRoute
 
 
-router = APIRouter(prefix="/documents", route_class=UnifiedResponseRoute)
+router = APIRouter(prefix="/documents")
 
 
 @router.post("/{doc_id}/chunk", response_model=APIResponse[DocumentResponse])
