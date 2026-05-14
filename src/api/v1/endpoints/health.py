@@ -7,7 +7,7 @@ from schemas.response import APIResponse
 from response import ok, UnifiedResponseRoute
 
 
-router = APIRouter(tags=["Health"], route_class=UnifiedResponseRoute)
+router = APIRouter(route_class=UnifiedResponseRoute)
 
 
 @router.get("/health", response_model=APIResponse[ResponseHealth])

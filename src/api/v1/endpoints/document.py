@@ -12,7 +12,7 @@ from exceptions import DocumentNotFoundException, APIException, DocumentExceptio
 from response import ok, UnifiedResponseRoute
 
 
-router = APIRouter(prefix="/documents", tags=["documents", "CRUD"], route_class=UnifiedResponseRoute)
+router = APIRouter(prefix="/documents", route_class=UnifiedResponseRoute)
 
 
 @router.post("/", response_model=APIResponse[List[DocumentResponse]])

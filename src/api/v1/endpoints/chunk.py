@@ -11,7 +11,7 @@ from exceptions import DocumentNotFoundException, APIException, DocumentExceptio
 from response import ok, UnifiedResponseRoute
 
 
-router = APIRouter(prefix="/documents", route_class=UnifiedResponseRoute, tags=["chunk"])
+router = APIRouter(prefix="/documents", route_class=UnifiedResponseRoute)
 
 
 @router.post("/{doc_id}/chunk", response_model=APIResponse[DocumentResponse])

@@ -9,7 +9,7 @@ from depends import get_embedding_service
 from exceptions import APIException, DocumentNotFoundException
 
 
-router = APIRouter(prefix="/documents", tags=["embedding"], route_class=UnifiedResponseRoute)
+router = APIRouter(prefix="/documents", route_class=UnifiedResponseRoute)
 
 
 @router.post("/{doc_id}/embedding", response_model=APIResponse[ResponseVectorization])
