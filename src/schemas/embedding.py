@@ -12,3 +12,6 @@ class Collections(StrEnum):
 
 class ParamsVectorization(BaseModel):
     collection: Collections
+
+class ResponseVectorization(BaseModel):
+    count_vectors: int

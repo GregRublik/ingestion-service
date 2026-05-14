@@ -5,8 +5,10 @@ import asyncio
 from repositories.aws import AWSRepository
 from repositories.document import DocumentRepository
 from repositories.qdrant import QdrantRepository
-from schemas.embedding import ParamsVectorization, Collections
+
+from schemas.embedding import ParamsVectorization, Collections, ResponseVectorization
 from services.unit_of_work import UnitOfWork
+
 from models.document import DocumentStatus
 from config import settings
 import json
@@ -85,7 +87,7 @@ class EmbeddingService:
                     # 4. сохраняем в Qdrant
                     await self.qdrant_repository.upsert(points, params_vectorization.collection)
 
-                    return {"status": "ok", "vectors": len(points)}
+                    return ResponseVectorization(count_vectors=len(points))
 
                 elif params_vectorization.collection == Collections.questions:
                     vectors = await self.create_vectors("question", chunks)
@@ -118,8 +120,7 @@ class EmbeddingService:
                         )
                         for i in range(0, len(points), 10)
                     ])
-
-                    return {"status": "ok", "vectors": len(points)}
+                    return ResponseVectorization(count_vectors=len(points))
 
             except Exception as e:
                 document.status = DocumentStatus.FAILED

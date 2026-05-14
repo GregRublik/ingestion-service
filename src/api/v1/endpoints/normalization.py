@@ -1,22 +1,27 @@
 from fastapi import APIRouter, Depends, status
-from services.normalization import NormalizationService
 
-from depends import get_normalization_service
-from exceptions import DocumentNotFoundException, DocumentException, APIException, DocumentAlreadyExistsException
+from services.normalization import NormalizationService
 from schemas.document import DocumentResponse
 from schemas.normalize import ParamsNormalize
+from schemas.response import APIResponse
 
-router = APIRouter()
+from response import ok, UnifiedResponseRoute
+from depends import get_normalization_service
+from exceptions import DocumentNotFoundException, DocumentException, APIException, DocumentAlreadyExistsException
 
-@router.post("/documents/{doc_id}/normalize", response_model=DocumentResponse)
+
+router = APIRouter(prefix="/documents", route_class=UnifiedResponseRoute)
+
+
+@router.post("/{doc_id}/normalize", response_model=APIResponse[DocumentResponse])
 async def normalize_document(
         doc_id: int,
         params_normalize: ParamsNormalize,
         normalization_service: NormalizationService = Depends(get_normalization_service),
 ):
     try:
-        return await normalization_service.normalize_document(doc_id, params_normalize)
-
+        document = await normalization_service.normalize_document(doc_id, params_normalize)
+        return ok(document)
     except DocumentNotFoundException as e:
         raise APIException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -1,28 +1,41 @@
 from fastapi import APIRouter
 from datetime import datetime
 
-router = APIRouter(tags=["Health"])
+from schemas.health import ResponseHealth, ResponseReady, ResponseLive, Status
+from schemas.response import APIResponse
 
-@router.get("/health")
+from response import ok, UnifiedResponseRoute
+
+
+router = APIRouter(tags=["Health"], route_class=UnifiedResponseRoute)
+
+
+@router.get("/health", response_model=APIResponse[ResponseHealth])
 async def health():
-    return {
-        "status": "ok",
-        "service": "orchestrator-service",
-        "timestamp": datetime.now()
-    }
+    return ok(
+        ResponseHealth(
+            service="orchestrator-service",
+            timestamp=datetime.now()
+        )
+    )
 
 
-@router.get("/ready")
+@router.get("/ready", response_model=APIResponse[ResponseReady])
 async def readiness():
-    # тут можно проверять зависимости:
-    # БД, Redis, Kafka, другие сервисы
-    return {
-        "status": "ready"
-    }
+    # TODO тут нужно проверять зависимости:  БД, Redis, Kafka, другие сервисы
+    return ok(
+        ResponseReady(
+            status=Status.ready,
+            timestamp=datetime.now()
+        )
+    )
 
 
-@router.get("/live")
+@router.get("/live", response_model=APIResponse[ResponseLive])
 async def liveness():
-    return {
-        "status": "alive"
-    }
+    return ok(
+        ResponseLive(
+            status=Status.live,
+            timestamp=datetime.now()
+        )
+    )
