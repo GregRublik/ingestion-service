@@ -63,7 +63,6 @@ class ChunkService:
         text = cont.decode("utf-8", errors="ignore")  # ✅ важно
         print(text[:100:])
         if chunk_type == ChunkType.questions:
-            # questions_and_answers = json.dumps(text, ensure_ascii=False).encode("utf-8")
             questions_and_answers = json.loads(text)
             chunks = [
                 {
@@ -71,7 +70,7 @@ class ChunkService:
                     "question": question_and_answer.get("question"),
                     "answer": question_and_answer.get("answer"),
                     "product_name": question_and_answer.get("product_name"),
-                    "product_id": question_and_answer.get("imt_id"), # todo либо nm_id
+                    "product_id": question_and_answer.get("nm_id"), # todo либо nm_id
                     "metadata": {
                         "chunk_index": i,
                         "length": len(question_and_answer)

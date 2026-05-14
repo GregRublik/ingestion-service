@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api.v1.endpoints import document, normalization, chunk, embedding
+from api.v1.endpoints import document, normalization, chunk, embedding, health
 import uvicorn
 from config import settings
 from exceptions import APIException, DatabaseUnavailableException
@@ -11,6 +11,7 @@ app.include_router(document.router, tags=["document"])
 app.include_router(normalization.router, tags=["normalization"])
 app.include_router(chunk.router, tags=["chunk"])
 app.include_router(embedding.router, tags=["embedding"])
+app.include_router(health.router, tags=["health"])
 
 app.add_exception_handler(APIException, api_exception_handler)
 app.add_exception_handler(DatabaseUnavailableException, db_handler)
