@@ -6,8 +6,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+#      rabbitmq:
+#        condition: service_healthy
     ports:
       - ${APP_PORT}:${APP_PORT}
     env_file:
@@ -37,27 +37,27 @@ services:
     networks:
       - rag-microservice
 
-  rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    hostname: rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
-      RABBITMQ_DEFAULT_VHOST: /
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    ports:
-      - "15672:15672"  # RabbitMQ Management UI
-      - "5672:5672"    # AMQP port
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 2s
-      timeout: 2s
-      retries: 10
-    networks:
-      - rag-microservice
-    env_file:
-      - .env
+#  rabbitmq:
+#    image: rabbitmq:3.13-management-alpine
+#    hostname: rabbitmq
+#    environment:
+#      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+#      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+#      RABBITMQ_DEFAULT_VHOST: /
+#    volumes:
+#      - rabbitmq-data:/var/lib/rabbitmq
+#    ports:
+#      - "15672:15672"  # RabbitMQ Management UI
+#      - "5672:5672"    # AMQP port
+#    healthcheck:
+#      test: ["CMD", "rabbitmqctl", "status"]
+#      interval: 2s
+#      timeout: 2s
+#      retries: 10
+#    networks:
+#      - rag-microservice
+#    env_file:
+#      - .env
 
 networks:
   rag-microservice:
@@ -65,4 +65,4 @@ networks:
 
 volumes:
   postgres-data:
-  rabbitmq-data:
+#  rabbitmq-data:
