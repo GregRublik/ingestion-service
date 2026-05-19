@@ -21,11 +21,6 @@ async def normalize_document(
     try:
         document = await normalization_service.normalize_document(doc_id, params_normalize)
         return ok(document)
-    except DocumentNotFoundException as e:
-        raise APIException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            error=e.detail
-        )
     except DocumentException as e:
         raise APIException(
             status_code=status.HTTP_400_BAD_REQUEST,
