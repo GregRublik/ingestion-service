@@ -17,6 +17,8 @@ class ModelAlreadyExistsException(BaseException):
 class ModelNotFoundException(Exception):
     """Объект не найден"""
 
+    detail = "model not found"
+
 class ModelMultipleResultsFoundException(BaseException):
     """При ожидании одного объекта нашлось несколько экземпляров"""
 
