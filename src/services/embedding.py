@@ -123,6 +123,6 @@ class EmbeddingService:
                     return ResponseVectorization(count_vectors=len(points))
 
             except Exception as e:
-                document.status = DocumentStatus.FAILED
+                document.status = DocumentStatus.failed
                 document.error_message = str(e)
                 raise e

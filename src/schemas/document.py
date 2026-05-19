@@ -50,3 +50,11 @@ class DocumentMetadataResponse(BaseModel):
 
 class DocumentDownloadUrlResponse(BaseModel):
     url: str
+
+class DocumentFilters(BaseModel):
+    file_extension: str | None = None
+    status: DocumentStatus | None = None
+    created_at_from: datetime | None = None
+    created_at_to: datetime | None = None
+    updated_at_from: datetime | None = None
+    updated_at_to: datetime | None = None

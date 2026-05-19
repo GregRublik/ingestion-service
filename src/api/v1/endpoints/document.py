@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, status, UploadFile
 from config import settings
 from services.document import DocumentService
 from depends import get_document_service
-from schemas.document import DocumentResponse, DocumentUpdate, DocumentDownloadUrlResponse
+from schemas.document import DocumentResponse, DocumentUpdate, DocumentDownloadUrlResponse, DocumentFilters
 from schemas.response import APIResponse, ok
 from exceptions import DocumentNotFoundException, APIException, DocumentException, DocumentAlreadyExistsException
 
@@ -53,12 +53,12 @@ async def get_document(
 
 @router.get("/", response_model=APIResponse[List[DocumentResponse]])
 async def get_documents(
-    status_filter: Optional[str] = None,
+    filters: DocumentFilters = Depends(),
     document_service: DocumentService = Depends(get_document_service),
 ):
     """Get documents"""
     try:
-        documents = await document_service.get_documents(status_filter=status_filter)
+        documents = await document_service.get_documents(filters=filters)
         return ok(documents)
     except DocumentNotFoundException as e:
         raise APIException(

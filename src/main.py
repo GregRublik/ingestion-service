@@ -14,7 +14,7 @@ app.include_router(chunk.router, tags=["chunk"])
 app.include_router(embedding.router, tags=["embedding"])
 
 app.add_exception_handler(APIException, api_exception_handler)
-app.add_exception_handler(DatabaseUnavailableException, db_handler)
+# app.add_exception_handler(DatabaseUnavailableException, db_handler)
 
 if __name__ == '__main__':
     uvicorn.run(app, host=settings.host, port=settings.port)

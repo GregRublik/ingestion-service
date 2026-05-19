@@ -60,7 +60,7 @@ class NormalizationService:
                         self.uow.session, doc_id
                     )
                     # 1. статус
-                    document_db.status = DocumentStatus.PROCESSING
+                    document_db.status = DocumentStatus.processing
 
 
                     file_obj = await self.aws_repository.get_document(
@@ -79,7 +79,7 @@ class NormalizationService:
                     )
 
             except ModelAlreadyExistsException as e:
-                document_db.status = DocumentStatus.FAILED
+                document_db.status = DocumentStatus.failed
                 document_db.error_message = e
                 raise DocumentAlreadyExistsException
 
@@ -234,7 +234,7 @@ class NormalizationService:
                     "file_extension": file_extension,
                     "file_size": len(payload),
                     "storage_path": f"s3://{settings.aws.bucket_name}/{key}",
-                    "status": DocumentStatus.NORMALIZED,
+                    "status": DocumentStatus.normalized,
                 })
 
         await self.aws_repository.push_document(

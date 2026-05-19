@@ -136,7 +136,7 @@ class ChunkService:
                 "file_extension": ".json",
                 "file_size": len(payload),
                 "storage_path": f"s3://{settings.aws.bucket_name}/{key}",
-                "status": DocumentStatus.EMBEDDING,  # следующий этап
+                "status": DocumentStatus.embedding,  # следующий этап
             }
         )
 
@@ -154,7 +154,7 @@ class ChunkService:
             )
 
             try:
-                document.status = DocumentStatus.PROCESSING
+                document.status = DocumentStatus.processing
 
                 chunk_data = await self.chunk(
                     document,
@@ -168,12 +168,12 @@ class ChunkService:
                     chunk_type
                 )
 
-                document.status = DocumentStatus.EMBEDDING
+                document.status = DocumentStatus.embedding
 
                 return db_document
 
             except Exception as e:
-                document.status = DocumentStatus.FAILED
+                document.status = DocumentStatus.failed
                 document.error_message = str(e)
                 raise e
 

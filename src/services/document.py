@@ -12,7 +12,7 @@ from repositories.aws import AWSRepository
 from repositories.document import DocumentRepository
 from fastapi import UploadFile
 from models.document import DocumentStatus
-from schemas.document import DocumentResponse, DocumentUpdate, DocumentDownloadUrlResponse
+from schemas.document import DocumentResponse, DocumentUpdate, DocumentDownloadUrlResponse, DocumentFilters
 from services.unit_of_work import UnitOfWork
 from config import settings
 
@@ -23,6 +23,31 @@ class DocumentService:
         self.aws_repository = aws_repository
         self.document_repository = document_repository
         self.uow = uow
+
+    @staticmethod
+    def _build_filters(filters: DocumentFilters) -> dict:
+
+        result = {}
+
+        if filters.status:
+            result["status"] = filters.status
+
+        if filters.file_extension:
+            result["file_extension"] = filters.file_extension
+
+        if filters.created_at_from:
+            result["created_at__gte"] = filters.created_at_from
+
+        if filters.created_at_to:
+            result["created_at__lte"] = filters.created_at_to
+
+        if filters.updated_at_from:
+            result["updated_at__gte"] = filters.updated_at_from
+
+        if filters.updated_at_to:
+            result["updated_at__lte"] = filters.updated_at_to
+
+        return result
 
     async def add_documents(self, bucket: str, files: list[UploadFile]):
         try:
@@ -37,7 +62,7 @@ class DocumentService:
                         "file_extension": os.path.splitext(file.filename)[1].lower(),
                         "file_size": file.size,
                         "storage_path": f"s3://{bucket}/{file.filename}",
-                        "status": DocumentStatus.UPLOADED,
+                        "status": DocumentStatus.uploaded,
                     })
                     list_added_documents.append(db_document)
 
@@ -52,13 +77,10 @@ class DocumentService:
         async with self.uow:
             return await self.document_repository.get_by_id(self.uow.session, doc_id)
 
-    async def get_documents(self, status_filter: Optional[str] = None) -> List[DocumentResponse]:
+    async def get_documents(self, filters: DocumentFilters) -> List[DocumentResponse]:
+        orm_filters = self._build_filters(filters)
         async with self.uow:
-            if status_filter:
-                documents = await self.document_repository.get_by_status(self.uow.session, status_filter)
-            else:
-                documents = await self.document_repository.get_all(self.uow.session)
-
+            documents = await self.document_repository.get_all(self.uow.session, orm_filters)
             return documents
 
     async def update_document(self, doc_id: int, document: DocumentUpdate):

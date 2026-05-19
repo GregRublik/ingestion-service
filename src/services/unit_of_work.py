@@ -22,10 +22,10 @@ class UnitOfWork:
             if isinstance(
                 exc,
                 (
-                    SQLAlchemyError,
-                    asyncpg.PostgresError,
-                    ConnectionRefusedError,
-                    OSError,
+                    # SQLAlchemyError,
+                    # asyncpg.PostgresError,
+                    # ConnectionRefusedError,
+                    # OSError,
                 ),
             ):
                 raise DatabaseUnavailableException(exc) from exc

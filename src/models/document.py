@@ -7,14 +7,14 @@ from db.database import Base
 
 
 class DocumentStatus(enum.Enum):
-    UPLOADED = "uploaded"  # приняли документ
-    PROCESSING = "processing"  # идёт обработка
-    NORMALIZED = "normalized" # нормализован
-    EMBEDDING = "embedding"  # считаются embeddings
-    INDEXING = "indexing"  # пишем в vector DB
-    READY = "ready"  # готов к использованию
-    FAILED = "failed"  # ошибка
-    DELETED = "deleted"  # удалён
+    uploaded = "uploaded"  # приняли документ
+    processing = "processing"  # идёт обработка
+    normalized = "normalized" # нормализован
+    embedding = "embedding"  # считаются embeddings
+    indexing = "indexing"  # пишем в vector DB
+    ready = "ready"  # готов к использованию
+    failed = "failed"  # ошибка
+    deleted = "deleted"  # удалён
 
 class Document(Base):
     __tablename__ = 'ingestion_documents'
@@ -24,7 +24,7 @@ class Document(Base):
 
     status = Column(
         Enum(DocumentStatus, name="document_status"),
-        default=DocumentStatus.UPLOADED,
+        default=DocumentStatus.uploaded,
         nullable=False
     )
 
