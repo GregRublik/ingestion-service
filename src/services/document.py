@@ -75,8 +75,10 @@ class DocumentService:
 
     async def get_document_by_id(self, doc_id: int) -> DocumentResponse:
         async with self.uow:
-            return await self.document_repository.get_by_id(self.uow.session, doc_id)
-
+            try:
+                return await self.document_repository.get_by_id(self.uow.session, doc_id)
+            except ModelNotFoundException:
+                raise DocumentNotFoundException
     async def get_documents(self, filters: DocumentFilters) -> List[DocumentResponse]:
         orm_filters = self._build_filters(filters)
         async with self.uow:
@@ -85,12 +87,14 @@ class DocumentService:
 
     async def update_document(self, doc_id: int, document: DocumentUpdate):
         async with self.uow:
-            document = await self.document_repository.change_one(
-                self.uow.session,
-                doc_id,
-                document.model_dump(exclude_unset=True)
-            )
-            return document
+            try:
+                return await self.document_repository.change_one(
+                    self.uow.session,
+                    doc_id,
+                    document.model_dump(exclude_unset=True)
+                )
+            except ModelNotFoundException:
+                raise DocumentNotFoundException
 
     async def delete_document(self, doc_id: int):
         async with self.uow:

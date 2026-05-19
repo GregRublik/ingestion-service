@@ -14,7 +14,7 @@ class DatabaseUnavailableException(Exception):
 class ModelAlreadyExistsException(BaseException):
     """Объект уже существует"""
 
-class ModelNotFoundException(BaseException):
+class ModelNotFoundException(Exception):
     """Объект не найден"""
 
 class ModelMultipleResultsFoundException(BaseException):

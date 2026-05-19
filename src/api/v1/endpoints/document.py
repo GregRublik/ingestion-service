@@ -7,7 +7,7 @@ from services.document import DocumentService
 from depends import get_document_service
 from schemas.document import DocumentResponse, DocumentUpdate, DocumentDownloadUrlResponse, DocumentFilters
 from schemas.response import APIResponse, ok
-from exceptions import DocumentNotFoundException, APIException, DocumentException, DocumentAlreadyExistsException
+from exceptions import APIException, DocumentException, DocumentAlreadyExistsException
 
 
 
@@ -41,14 +41,8 @@ async def get_document(
     document_service: DocumentService = Depends(get_document_service),
 ):
     """Get document"""
-    try:
-        document = await document_service.get_document_by_id(doc_id)
-        return ok(document)
-    except DocumentNotFoundException as e:
-        raise APIException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            error=e.detail
-        )
+    document = await document_service.get_document_by_id(doc_id)
+    return ok(document)
 
 
 @router.get("/", response_model=APIResponse[List[DocumentResponse]])
@@ -57,14 +51,8 @@ async def get_documents(
     document_service: DocumentService = Depends(get_document_service),
 ):
     """Get documents"""
-    try:
-        documents = await document_service.get_documents(filters=filters)
-        return ok(documents)
-    except DocumentNotFoundException as e:
-        raise APIException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            error=e.detail
-        )
+    documents = await document_service.get_documents(filters=filters)
+    return ok(documents)
 
 
 @router.patch("/{doc_id}", response_model=APIResponse[DocumentResponse])
@@ -74,14 +62,8 @@ async def update_document(
     document_service: DocumentService = Depends(get_document_service),
 ):
     """Update document"""
-    try:
-        document = await document_service.update_document(doc_id, payload)
-        return ok(document)
-    except DocumentNotFoundException as e:
-        raise APIException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            error=e.detail
-        )
+    document = await document_service.update_document(doc_id, payload)
+    return ok(document)
 
 
 @router.delete("/{doc_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -90,13 +72,7 @@ async def delete_document(
     document_service: DocumentService = Depends(get_document_service),
 ):
     """Delete document"""
-    try:
-        await document_service.delete_document(doc_id)
-    except DocumentNotFoundException as e:
-        raise APIException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            error=e.detail
-        )
+    await document_service.delete_document(doc_id)
 
 
 @router.get("/{doc_id}/download", response_model=APIResponse[DocumentDownloadUrlResponse])
@@ -105,11 +81,5 @@ async def get_download_url_document(
     document_service: DocumentService = Depends(get_document_service),
 ):
     """Get download url document"""
-    try:
-        url_document = await document_service.get_download_url(doc_id)
-        return ok(url_document)
-    except DocumentNotFoundException as e:
-        raise APIException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            error=e.detail
-        )
+    url_document = await document_service.get_download_url(doc_id)
+    return ok(url_document)

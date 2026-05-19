@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from api.v1.endpoints import document, normalization, chunk, embedding, health
 import uvicorn
 from config import settings
-from exceptions import APIException, DatabaseUnavailableException
-from exception_handlers import api_exception_handler, db_handler
+from exceptions import APIException, DatabaseUnavailableException, DocumentNotFoundException
+from exception_handlers import api_exception_handler, db_handler, not_found_handler
 
 app = FastAPI()
 
@@ -14,7 +14,8 @@ app.include_router(chunk.router, tags=["chunk"])
 app.include_router(embedding.router, tags=["embedding"])
 
 app.add_exception_handler(APIException, api_exception_handler)
-# app.add_exception_handler(DatabaseUnavailableException, db_handler)
+app.add_exception_handler(DocumentNotFoundException, not_found_handler)
+app.add_exception_handler(DatabaseUnavailableException, db_handler)
 
 if __name__ == '__main__':
     uvicorn.run(app, host=settings.host, port=settings.port)

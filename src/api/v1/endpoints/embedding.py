@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends
 
 from services.embedding import EmbeddingService
 from schemas.embedding import ParamsVectorization, ResponseVectorization
 from schemas.response import APIResponse, ok
 
 from depends import get_embedding_service
-from exceptions import APIException, DocumentNotFoundException
 
 
 router = APIRouter(prefix="/documents")
@@ -17,11 +16,5 @@ async def embedding_document(
     params_vectorization: ParamsVectorization,
     embedding_service: EmbeddingService = Depends(get_embedding_service),
 ):
-    try:
-        data = await embedding_service.embedding_document(doc_id, params_vectorization)
-        return ok(data)
-    except DocumentNotFoundException as e:
-        raise APIException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            error=e.detail
-        )
+    data = await embedding_service.embedding_document(doc_id, params_vectorization)
+    return ok(data)
