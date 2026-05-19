@@ -47,40 +47,31 @@ class NormalizationService:
 
         self.converter = DocumentConverter()
 
-    def get_handler_normalization(self, file_extension):
-
-        handler = self.parsers[file_extension]
-
-        return handler
+    def get_normalizer(self, file_extension) -> Callable:
+        return self.parsers[file_extension]
 
     async def normalize_document(self, doc_id: int, params_normalize: ParamsNormalize):
+        """Normalize document"""
         async with self.uow:
             try:
-                    document_db = await self.document_repository.get_by_id(
-                        self.uow.session, doc_id
-                    )
-                    # 1. статус
-                    document_db.status = DocumentStatus.processing
+                document_db = await self.document_repository.get_by_id(
+                    self.uow.session, doc_id
+                )
+                file_obj = await self.aws_repository.get_document(
+                    settings.aws.bucket_name, document_db.file_name
+                )
+                content: StreamingBody = file_obj["body"]
+                cont = await content.read()
 
+                normalizer = self.get_normalizer(document_db.file_extension)
+                result = await normalizer(cont, params_normalize)
+                return await self.save_normalized(
+                    document_db, result, params_normalize
+                )
 
-                    file_obj = await self.aws_repository.get_document(
-                        settings.aws.bucket_name, document_db.file_name
-                    )
-
-                    content: StreamingBody = file_obj["body"]
-                    cont = await content.read()
-
-                    handler = self.get_handler_normalization(document_db.file_extension)
-
-                    result = await handler(cont, params_normalize)
-
-                    return await self.save_normalized(
-                        document_db, result, params_normalize
-                    )
-
-            except ModelAlreadyExistsException as e:
+            except ModelAlreadyExistsException:
                 document_db.status = DocumentStatus.failed
-                document_db.error_message = e
+                document_db.error_message = DocumentAlreadyExistsException.detail
                 raise DocumentAlreadyExistsException
 
     @staticmethod
