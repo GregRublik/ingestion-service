@@ -1,5 +1,6 @@
 from aiobotocore.response import StreamingBody
 from langchain_core.embeddings import Embeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 import asyncio
 
 from repositories.aws import AWSRepository
@@ -13,12 +14,20 @@ from models.document import DocumentStatus
 from config import settings
 import json
 
+embeddings = HuggingFaceEmbeddings(
+        model_name=settings.vdb.embedding_model,
+        encode_kwargs={
+            "device": settings.vdb.device,
+            "normalize_embeddings": True,
+        }
+    )
+
 
 class EmbeddingService:
 
     def __init__(
         self,
-        model,
+        model: Embeddings,
         document_repository: DocumentRepository,
         aws_repository: AWSRepository,
         qdrant_repository: QdrantRepository,

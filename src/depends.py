@@ -11,18 +11,23 @@ from repositories.aws import AWSRepository
 
 from services import document, unit_of_work
 from services.chunk import ChunkService
-from services.embedding import EmbeddingService
+# from services.embedding import EmbeddingService, embeddings
 from services.normalization import NormalizationService
+from services import embedding
 
 from aws.client import get_aws_client
 from db.database import get_db_session
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_core.embeddings import Embeddings
 
 
 def get_vectordb_client() -> AsyncQdrantClient:
     return AsyncQdrantClient(
         url=f"http://{settings.vdb.host}:{settings.vdb.port}",
     )
+
+def get_embeddings() -> Embeddings:
+    return embedding.embeddings
 
 # REPOSITORIES
 def get_aws_repository(
@@ -66,20 +71,14 @@ def get_embedding_service(
     aws_repository: AWSRepository = Depends(get_aws_repository),
     qdrant_repository: QdrantRepository = Depends(get_qdrant_repository),
     uow: unit_of_work.UnitOfWork = Depends(get_uow_service),
+    embeddings: Embeddings = Depends(get_embeddings)
 ):
-    model = HuggingFaceEmbeddings(
-        model_name=settings.vdb.embedding_model,
-        encode_kwargs={
-            "device": settings.vdb.device,
-            "normalize_embeddings": True,
-        }
-    )
-    return EmbeddingService(model, document_repository, aws_repository, qdrant_repository, uow)
+    return embedding.EmbeddingService(embeddings, document_repository, aws_repository, qdrant_repository, uow)
 
 def get_chunk_service(
     aws_repository: AWSRepository = Depends(get_aws_repository),
     document_repository: DocumentRepository = Depends(get_document_repository),
     uow: unit_of_work.UnitOfWork = Depends(get_uow_service),
-    embedding_service: EmbeddingService = Depends(get_embedding_service),
+    embedding_service: embedding.EmbeddingService = Depends(get_embedding_service),
 ) -> ChunkService:
     return ChunkService(aws_repository, document_repository, uow, embedding_service)
