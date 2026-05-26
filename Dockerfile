@@ -16,4 +16,4 @@ RUN uv pip install --system .
 # Копируем остальные файлы проекта
 COPY . .
 
-CMD python src/main.py
+CMD ["python", "src/main.py"]
