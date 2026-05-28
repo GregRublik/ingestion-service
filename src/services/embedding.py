@@ -1,6 +1,6 @@
 from aiobotocore.response import StreamingBody
+from fastembed import TextEmbedding
 from langchain_core.embeddings import Embeddings
-from langchain_huggingface import HuggingFaceEmbeddings
 import asyncio
 
 from repositories.aws import AWSRepository
@@ -14,39 +14,37 @@ from models.document import DocumentStatus
 from config import settings
 import json
 
-embeddings = HuggingFaceEmbeddings(
-        model_name=settings.vdb.embedding_model,
-        encode_kwargs={
-            "device": settings.vdb.device,
-            "normalize_embeddings": True,
-        }
-    )
-
 
 class EmbeddingService:
 
     def __init__(
         self,
-        model: Embeddings,
         document_repository: DocumentRepository,
         aws_repository: AWSRepository,
         qdrant_repository: QdrantRepository,
         uow: UnitOfWork
     ):
-        self.model = model
         self.document_repository = document_repository
+        self.model = TextEmbedding(
+            model_name=settings.vdb.embedding_model
+        )
         self.aws_repository = aws_repository
         self.qdrant_repository = qdrant_repository
         self.uow = uow
 
-    def get_embedding(self) -> Embeddings:
-        return self.model
+    async def embed_query(self, query: str) -> list[list[float]]:
+        embeddings = list(self.model.embed([query]))
+        return [embedding.tolist() for embedding in embeddings]
+
+    async def embed_queries(self, queries: list[str]) -> list[list[list[float]]]:
+        embeddings = list(self.model.embed(queries))
+        return [[embedding.tolist()] for embedding in embeddings]
 
     async def create_vectors(self, field_vector: str, elements: list[dict]):
         texts = []
         for element in elements:
             texts.append(element[field_vector])
-        return await self.model.aembed_documents(texts)
+        return await self.embed_queries(texts)
 
     async def get_chunks(self, collection: str, file_name: str):
         # 1. загрузка чанков
