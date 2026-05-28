@@ -16,7 +16,6 @@ from services import embedding
 
 from aws.client import get_aws_client
 from db.database import get_db_session
-from langchain_core.embeddings import Embeddings
 
 
 def get_vectordb_client() -> AsyncQdrantClient:
@@ -66,7 +65,6 @@ def get_embedding_service(
     aws_repository: AWSRepository = Depends(get_aws_repository),
     qdrant_repository: QdrantRepository = Depends(get_qdrant_repository),
     uow: unit_of_work.UnitOfWork = Depends(get_uow_service),
-    # embeddings: Embeddings = Depends(get_embeddings)
 ):
     return embedding.EmbeddingService(document_repository, aws_repository, qdrant_repository, uow)
 
