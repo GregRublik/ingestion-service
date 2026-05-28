@@ -10,8 +10,8 @@ from config import settings
 from models.document import Document, DocumentStatus
 from schemas.normalize import ParamsNormalize, StrategyMode
 
-from docling.document_converter import DocumentConverter
-from docling.datamodel.document import DocumentStream
+# from docling.document_converter import DocumentConverter
+# from docling.datamodel.document import DocumentStream
 from io import BytesIO
 
 
@@ -45,7 +45,7 @@ class NormalizationService:
             ".txt": self.normalize_text,
         }
 
-        self.converter = DocumentConverter()
+        # self.converter = DocumentConverter()
 
     def get_normalizer(self, file_extension) -> Callable:
         return self.parsers[file_extension]
@@ -166,6 +166,10 @@ class NormalizationService:
         """
         file_stream — это file-like объект (например StreamingBody из S3)
         """
+        class DoclingNotInstalled(Exception):
+            pass
+
+        raise DoclingNotInstalled # В будущем может будем использовать
         doc = self.converter.convert(file_path)
 
         blocks = []
