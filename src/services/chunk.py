@@ -61,7 +61,6 @@ class ChunkService:
         cont = await content.read()
 
         text = cont.decode("utf-8", errors="ignore")  # ✅ важно
-        print(text[:100:])
         if chunk_type == ChunkType.questions:
             questions_and_answers = json.loads(text)
             chunks = [
