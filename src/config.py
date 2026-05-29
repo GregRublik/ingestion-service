@@ -33,6 +33,7 @@ class VDBSettings(BaseSettings):
     port: int
     embedding_model: str
     device: str
+    api_key: str
 
     base_collection: str
     questions_collection: str

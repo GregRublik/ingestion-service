@@ -32,13 +32,13 @@ class EmbeddingService:
         self.qdrant_repository = qdrant_repository
         self.uow = uow
 
-    async def embed_query(self, query: str) -> list[list[float]]:
+    async def embed_query(self, query: str) -> list[float]:
         embeddings = list(self.model.embed([query]))
         return [embedding.tolist() for embedding in embeddings]
 
-    async def embed_queries(self, queries: list[str]) -> list[list[list[float]]]:
+    async def embed_queries(self, queries: list[str]) -> list[list[float]]:
         embeddings = list(self.model.embed(queries))
-        return [[embedding.tolist()] for embedding in embeddings]
+        return [embedding.tolist() for embedding in embeddings]
 
     async def create_vectors(self, field_vector: str, elements: list[dict]):
         texts = []
@@ -119,14 +119,17 @@ class EmbeddingService:
                         })
 
                     # 4. сохраняем в Qdrant
+                    sem = asyncio.Semaphore(3)
+
+                    async def safe_upsert(batch):
+                        async with sem:
+                            return await self.qdrant_repository.upsert(batch, params_vectorization.collection)
 
                     await asyncio.gather(*[
-                        self.qdrant_repository.upsert(
-                            points[i:i + 10],
-                            params_vectorization.collection,
-                        )
+                        safe_upsert(points[i:i + 10])
                         for i in range(0, len(points), 10)
                     ])
+
                     return ResponseVectorization(count_vectors=len(points))
 
             except Exception as e:

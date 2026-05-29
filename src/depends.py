@@ -21,6 +21,7 @@ from db.database import get_db_session
 def get_vectordb_client() -> AsyncQdrantClient:
     return AsyncQdrantClient(
         url=f"http://{settings.vdb.host}:{settings.vdb.port}",
+        api_key=settings.vdb.api_key,
     )
 
 # REPOSITORIES
